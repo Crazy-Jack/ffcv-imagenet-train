@@ -1,11 +1,11 @@
 data:
   in_memory: 1
-  num_workers: 12
+  num_workers: 24
 dist:
-  world_size: 2
+  world_size: 8
 logging:
-  folder: /tmp/
-  save_model_freq: 2
+  folder: /workspace/log
+  save_model_freq: 1
 lr:
   lr: 0.1
   lr_schedule_type: cyclic

@@ -87,6 +87,7 @@ Section('training', 'training hyper param stuff').params(
     distributed=Param(int, 'is distributed?', default=0),
     use_blurpool=Param(int, 'use blurpool?', default=0),
     topk_info=Param(str, 'topk_info, each digit represent the sparsity level, 0 represent 100%, 1 represent 10%, etc', default=''),
+    topk_layer_name=Param(str, 'Topk layer name, specified for which class what to use', default='TopkLayer'),
 )
 
 Section('resume', 'training resume with checkpoints').params(
@@ -380,13 +381,14 @@ class ImageNetTrainer:
     @param('training.distributed')
     @param('training.use_blurpool')
     @param('training.topk_info')
+    @param('training.topk_layer_name')
     @param('resume.resume_model_from_ckpt')
     @param('resume.model_ckpt')
-    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt):
+    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name):
         scaler = GradScaler()
         if 'vit' in arch.lower():
             model_name_vit = arch.split("+")[1] # B_16_imagenet1k
-            model = ViT(model_name_vit, pretrained=False, image_size=224, topk_info=topk_info)
+            model = ViT(model_name_vit, pretrained=False, image_size=224, topk_layer_name=topk_layer_name, topk_info=topk_info)
         else:
             model = getattr(models, arch)(pretrained=pretrained)
         

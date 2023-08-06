@@ -7,7 +7,7 @@ from torch import nn
 from torch import Tensor 
 from torch.nn import functional as F
 from .utils import TopkLayer
-
+from .topk_layer import find_topk_operation_using_name 
 def split_last(x, shape):
     "split the last dimension to given shape"
     shape = list(shape)
@@ -72,7 +72,7 @@ class PositionWiseFeedForward(nn.Module):
 
 class Block(nn.Module):
     """Transformer Block"""
-    def __init__(self, dim, num_heads, ff_dim, dropout, topk):
+    def __init__(self, dim, num_heads, ff_dim, dropout, topk_layer_name, topk):
         super().__init__()
         self.attn = MultiHeadedSelfAttention(dim, num_heads, dropout)
         self.proj = nn.Linear(dim, dim)
@@ -80,7 +80,7 @@ class Block(nn.Module):
         self.pwff = PositionWiseFeedForward(dim, ff_dim)
         self.norm2 = nn.LayerNorm(dim, eps=1e-6)
         self.drop = nn.Dropout(dropout)
-        self.topk = TopkLayer(topk)
+        self.topk = find_topk_operation_using_name(topk_layer_name)(topk)
 
 
     def forward(self, x, mask):
@@ -94,7 +94,7 @@ class Block(nn.Module):
 
 class Transformer(nn.Module):
     """Transformer with Self-Attentive Blocks"""
-    def __init__(self, num_layers, dim, num_heads, ff_dim, dropout, topk_info):
+    def __init__(self, num_layers, dim, num_heads, ff_dim, dropout, topk_info, topk_layer_name):
         super().__init__()
         # topk_layers is a string connected by _, topk_sparsity is a string connected by _ as well
         # parse the sparsity info
@@ -114,7 +114,7 @@ class Transformer(nn.Module):
             topk_sparsity = [1.] * num_layers
 
         self.blocks = nn.ModuleList([
-            Block(dim, num_heads, ff_dim, dropout, topk=topk_sparsity[layer_id]) for layer_id in range(num_layers)])
+            Block(dim, num_heads, ff_dim, dropout, topk_layer_name, topk=topk_sparsity[layer_id]) for layer_id in range(num_layers)])
 
     def forward(self, x, mask=None):
         for block in self.blocks:

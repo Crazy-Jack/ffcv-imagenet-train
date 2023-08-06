@@ -58,6 +58,7 @@ class ViT(nn.Module):
         classifier: str = 'token',
         positional_embedding: str = '1d',
         in_channels: int = 3, 
+        topk_layer_name: str = 'TopkLayer',
         image_size: Optional[int] = None,
         num_classes: Optional[int] = None,
         topk_info: Optional[str] = None,
@@ -115,7 +116,7 @@ class ViT(nn.Module):
         
         # Transformer
         self.transformer = Transformer(num_layers=num_layers, dim=dim, num_heads=num_heads, 
-                                       ff_dim=ff_dim, dropout=dropout_rate, topk_info=topk_info)
+                                       ff_dim=ff_dim, dropout=dropout_rate, topk_info=topk_info, topk_layer_name=topk_layer_name)
 
         # Representation layer
         if representation_size and load_repr_layer:
