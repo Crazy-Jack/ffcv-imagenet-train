@@ -397,21 +397,20 @@ class ImageNetTrainer:
                 else: apply_blurpool(child)
         if use_blurpool: apply_blurpool(model)
         
-        if self.gpu == 0:
-            if resume_model_from_ckpt:
-                self.log({'message': f"==> Loading model ckpt from {model_ckpt}!"})
-                checkpoint = torch.load(model_ckpt)
-                # editing the mapping keys
-                new_checkpoint = {}
-                for k in checkpoint:
-                    new_k = k.replace("module.", "")
-                    new_checkpoint[new_k] = checkpoint[k]
+        if resume_model_from_ckpt:
+            self.log({'message': f"==> Loading model ckpt from {model_ckpt}!"})
+            checkpoint = torch.load(model_ckpt)
+            # editing the mapping keys
+            new_checkpoint = {}
+            for k in checkpoint:
+                new_k = k.replace("module.", "")
+                new_checkpoint[new_k] = checkpoint[k]
 
-                model.load_state_dict(new_checkpoint)
+            model.load_state_dict(new_checkpoint)
 
-            else:
-                self.log({'message': f"==> creating model from scratch!"})
-                
+        else:
+            self.log({'message': f"==> creating model from scratch!"})
+            
         # model = model.to(memory_format=ch.channels_last)
         model = model.to(self.gpu)
 
