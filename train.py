@@ -176,7 +176,7 @@ class ImageNetTrainer:
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 return s.getsockname()[1]
 
-        os.environ['MASTER_PORT'] = find_free_port()
+        os.environ['MASTER_PORT'] = str(find_free_port())
 
         dist.init_process_group("nccl", rank=self.gpu, world_size=world_size)
         ch.cuda.set_device(self.gpu)
