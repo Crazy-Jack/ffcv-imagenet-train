@@ -1,5 +1,7 @@
-
+source /workspace/env/miniconda3/etc/profile.d/conda.sh
+conda init bash
 conda activate ffcv
+echo "$(which pip)";
 pip3 install torch torchvision torchaudio
 pip3 install cupy-cuda11x
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
