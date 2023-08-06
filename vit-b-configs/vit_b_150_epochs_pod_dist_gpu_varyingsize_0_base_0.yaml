@@ -8,12 +8,12 @@ logging:
   log_level: 2
   save_model_freq: 1
 lr:
-  lr: 0.030
+  lr: 0.020
   lr_schedule_type: cyclic
 model:
   arch: ViT+B_16_imagenet1k
 resolution:
-  end_ramp: 40
+  end_ramp: 60
   max_res: 192
   min_res: 32
   start_ramp: 1
