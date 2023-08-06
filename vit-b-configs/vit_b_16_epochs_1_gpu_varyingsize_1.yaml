@@ -1,0 +1,32 @@
+data:
+  gpu: 0
+  in_memory: 1
+  num_workers: 12
+dist:
+  world_size: 1
+logging:
+  folder: /tmp/
+  save_model_freq: 1
+lr:
+  lr: 0.5
+  lr_schedule_type: cyclic
+model:
+  arch: ViT+B_16_imagenet1k
+resolution:
+  end_ramp: 13
+  max_res: 192
+  min_res: 160
+  start_ramp: 11
+training:
+  batch_size: 25
+  bn_wd: 0
+  distributed: 1
+  epochs: 16
+  label_smoothing: 0.1
+  momentum: 0.9
+  optimizer: sgd
+  weight_decay: 0.0001
+  use_blurpool: 1
+validation:
+  lr_tta: true
+  resolution: 256
