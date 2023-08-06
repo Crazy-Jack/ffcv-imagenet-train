@@ -23,7 +23,7 @@ echo "running "$name;
 #     --dist.port 12321 \
 
 echo "running topk";
-topk='333366667777';
+topk='555566667777';
 # # Set the visible GPUs according to the `world_size` configuration parameter
 # # Modify `data.in_memory` and `data.num_workers` based on your machine
 python ../../train.py --config-file ../../$name.yaml \

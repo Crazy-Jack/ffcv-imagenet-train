@@ -136,6 +136,7 @@ apt update && apt install -y cmake g++ wget unzip
 ```
 ```
 # Download and unpack sources
+# start from 4:25 - 4:39 finished - install opencv from source takes 14 mins.
 cd /workspace/env/
 mkdir Install-OpenCV
 cd Install-OpenCV
