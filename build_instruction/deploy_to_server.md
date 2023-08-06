@@ -11,23 +11,19 @@ Running
 500 GB Pod Volume
 Volume Path: /workspace
 
-0. System apt install
+0. System install / second time install
 ```
-apt-get update && apt-get install tmux -y 
-
-apt update && apt install -y cmake g++ wget unzip
-
 apt-get update && apt-get install -y --no-install-recommends \
         software-properties-common \
         build-essential \
         curl \
         git \
-        ffmpeg
-
-apt-get install pkg-config -y
-
-apt install vim -y
-
+        ffmpeg \
+        tmux \
+        cmake \
+        g++ wget unzip \
+        pkg-config \
+        vim
 
 # ENV variable
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/source/lib/pkgconfig
@@ -37,8 +33,27 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/ins
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
 ```
 
+# download data 
+0. download the dataset 
+
+Use backblaze for cheap version of S3
+mkdir -p /workspace/data && cd /workspace/data
+wget https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
+mv b2-linux b2
+chmod +x b2 
+
+./b2 authorize_account
+Backblaze application key ID: 
+Backblaze application key: 
+
+./b2 download_file_by_id 4_z9bfa244ea904c331819a0518_f2013f5c2d42f1c1e_d20230805_m133806_c005_v0501007_t0054_u01691242686010 train_500_0.50_90.ffcv
+
+./b2 download_file_by_id 4_z9bfa244ea904c331819a0518_f209b1e9245eb6a42_d20230805_m215628_c005_v0501000_t0025_u01691272588680 val_500_0.50_90.ffcv
+
+```
 --------------------
 
 ```
@@ -51,66 +66,15 @@ bash Miniconda3-latest-Linux-x86_64.sh
 >>> /workspace/env/miniconda3
 
 # the following activates conda everything you exit and re-enter 
-$ source /workspace/env/miniconda3/etc/profile.d/conda.sh
-$ conda init
-$ conda activate 
+```
+source /workspace/env/miniconda3/etc/profile.d/conda.sh
+conda init
+conda activate 
+```
+
 
 since the /workspace/env is persistence disk, the conda file will be saved 
 
-
-```
-2. [SYSTEM Reinstall] install tmux 
-```
-apt-get update
-apt-get install tmux -y 
-```
-3. [SYSTEM Reinstall] Install dependencies 
-```
-apt-get update && apt-get install -y --no-install-recommends \
-        software-properties-common \
-        build-essential \
-        curl \
-        git \
-        ffmpeg
-```
-this is quick. 
-
-
-4.  download the dataset 
-```
-conda create -n aws python=3.9 -y
-conda activate aws
-pip install awscli
-
-aws configure
-
-Input the following ID and key to set the aws configure.
-
-Access key ID: AKIA3WS7UL243YIUYHOJ
-Secret access key: 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
-
-Other input can be empty.
-
-mkdir -p ffcv-image 
-# start from 1:24 
-aws s3 cp s3://imagenetcache/ImagenetFFCV/train_500_0.50_90.ffcv ffcv-image/
-aws s3 cp s3://imagenetcache/ImagenetFFCV/val_500_0.50_90.ffcv ffcv-image/
-```
-
-Use backblaze for cheap version of S3
-mkdir -p /workspace/data && cd /workspace/data
-wget https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
-mv b2-linux b2
-chmod +x b2 
-
-./b2 authorize_account
-Backblaze application key ID: 005ba4e94311a580000000001
-Backblaze application key: K005bPZC2FWThrvw1L8cl5OXW/kX6yk
-
-./b2 download_file_by_id 4_z9bfa244ea904c331819a0518_f2013f5c2d42f1c1e_d20230805_m133806_c005_v0501007_t0054_u01691242686010 train_500_0.50_90.ffcv
-
-./b2 download_file_by_id 4_z9bfa244ea904c331819a0518_f209b1e9245eb6a42_d20230805_m215628_c005_v0501000_t0025_u01691272588680 val_500_0.50_90.ffcv
-```
 
 5. conda env
 
@@ -152,9 +116,6 @@ therefore we will use `pip3 install cupy-cuda11x`
 
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 
-
-8. [SYSTEM Reinstall] Install PKG configure 
-`sudo apt-get install pkg-config`
 
 
 9. libstd++
@@ -232,16 +193,24 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/ins
 pip install ffcv
 ```
 
+13. Download source code for training 
+
+```
+cd /workspace/
+git clone https://github.com/Crazy-Jack/ffcv-imagenet-train.git
+```
+
+
 14. install torchmetrics
 
 ```
-pip install torchmetrics-0.6.0.tar.gz
+pip install /workspace/ffcv-imagenet-train/build_instruction/torchmetrics-0.6.0.tar.gz
 ```
 
 15. install local modified modules
 
 ```
-cd vit-pytorch-customized
+cd /workspace/ffcv-imagenet-train/vit-pytorch-customized
 pip install -e .
 ```
 
@@ -255,3 +224,32 @@ pip install pyyaml
 
 [W socket.cpp:601] [c10d] The client socket has failed to connect to [localhost]:12321 (errno: 99 - Cannot assign requested address).
 
+- solution: need to expose internal TCP port, for example 12321, 12320, etc and use these port when doing distributed training 
+
+
+
+
+
+
+Appendix:
+
+For aws:
+```
+conda create -n aws python=3.9 -y
+conda activate aws
+pip install awscli
+
+aws configure
+
+Input the following ID and key to set the aws configure.
+
+Access key ID: AKIA3WS7UL243YIUYHOJ
+Secret access key: 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
+
+Other input can be empty.
+
+mkdir -p ffcv-image 
+# start from 1:24 
+aws s3 cp s3://imagenetcache/ImagenetFFCV/train_500_0.50_90.ffcv ffcv-image/
+aws s3 cp s3://imagenetcache/ImagenetFFCV/val_500_0.50_90.ffcv ffcv-image/
+```

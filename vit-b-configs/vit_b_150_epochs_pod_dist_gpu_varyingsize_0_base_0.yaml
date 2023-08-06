@@ -1,0 +1,39 @@
+data:
+  in_memory: 1
+  num_workers: 12
+dist:
+  world_size: 7
+logging:
+  folder: /workspace/log/
+  log_level: 2
+  save_model_freq: 1
+lr:
+  lr: 0.010
+  lr_schedule_type: cyclic
+model:
+  arch: ViT+B_16_imagenet1k
+resolution:
+  end_ramp: 60
+  max_res: 192
+  min_res: 32
+  start_ramp: 1
+training:
+  batch_size: 400
+  bn_wd: 0
+  distributed: 1
+  epochs: 150
+  label_smoothing: 0.1
+  momentum: 0.9
+  optimizer: sgd
+  weight_decay: 0.0001
+  use_blurpool: 1
+validation:
+  lr_tta: true
+  resolution: 256
+  batch_size: 40
+resume:
+  optim_ckpt: ""
+  resume_opt_from_ckpt: 0
+  model_ckpt: ""
+  resume_model_from_ckpt: 0
+  init_eval_checker: 0
