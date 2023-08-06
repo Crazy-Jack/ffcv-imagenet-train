@@ -1,5 +1,5 @@
 
-
+conda activate ffcv
 pip3 install torch torchvision torchaudio
 pip3 install cupy-cuda11x
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
@@ -44,7 +44,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/ins
 pip install ffcv
 # Download source code for training 
 cd /workspace/
-git clone https://github.com/Crazy-Jack/ffcv-imagenet-train.git
+
 # 14. install torchmetrics
 pip install /workspace/ffcv-imagenet-train/build_instruction/torchmetrics-0.6.0.tar.gz
 # install local modified modules
