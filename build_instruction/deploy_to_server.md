@@ -236,3 +236,9 @@ pip install ffcv
 pip install torchmetrics-0.6.0.tar.gz
 ```
 
+15. install local modified modules
+
+```
+cd vit-pytorch-customized
+pip install -e .
+```
