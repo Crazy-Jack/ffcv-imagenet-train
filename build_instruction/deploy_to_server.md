@@ -106,6 +106,8 @@ Backblaze application key ID: 005ba4e94311a580000000001
 Backblaze application key: K005bPZC2FWThrvw1L8cl5OXW/kX6yk
 
 ./b2 download_file_by_id 4_z9bfa244ea904c331819a0518_f2013f5c2d42f1c1e_d20230805_m133806_c005_v0501007_t0054_u01691242686010 train_500_0.50_90.ffcv
+
+./b2 download_file_by_id 4_z9bfa244ea904c331819a0518_f209b1e9245eb6a42_d20230805_m215628_c005_v0501000_t0025_u01691272588680 val_500_0.50_90.ffcv
 ```
 
 5. conda env
@@ -227,3 +229,10 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/ins
 ```
 pip install ffcv
 ```
+
+14. install torchmetrics
+
+```
+pip install torchmetrics-0.6.0.tar.gz
+```
+
