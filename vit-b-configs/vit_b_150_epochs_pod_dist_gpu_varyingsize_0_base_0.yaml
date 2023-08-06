@@ -1,19 +1,19 @@
 data:
   in_memory: 1
-  num_workers: 12
+  num_workers: 24
 dist:
-  world_size: 7
+  world_size: 8
 logging:
   folder: /workspace/log/
   log_level: 2
   save_model_freq: 1
 lr:
-  lr: 0.010
+  lr: 0.030
   lr_schedule_type: cyclic
 model:
   arch: ViT+B_16_imagenet1k
 resolution:
-  end_ramp: 60
+  end_ramp: 40
   max_res: 192
   min_res: 32
   start_ramp: 1
