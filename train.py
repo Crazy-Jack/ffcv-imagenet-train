@@ -166,7 +166,17 @@ class ImageNetTrainer:
     @param('dist.world_size')
     def setup_distributed(self, address, port, world_size):
         os.environ['MASTER_ADDR'] = address
-        os.environ['MASTER_PORT'] = port
+
+        import socket 
+        from contextlib import closing
+
+        def find_free_port():
+            with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+                s.bind(('localhost', 0))
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                return s.getsockname()[1]
+
+        os.environ['MASTER_PORT'] = find_free_port()
 
         dist.init_process_group("nccl", rank=self.gpu, world_size=world_size)
         ch.cuda.set_device(self.gpu)

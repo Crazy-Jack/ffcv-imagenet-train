@@ -26,6 +26,8 @@ apt-get update && apt-get install -y --no-install-recommends \
 
 apt-get install pkg-config -y
 
+apt install vim -y
+
 
 # ENV variable
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/source/lib/pkgconfig
@@ -242,3 +244,14 @@ pip install torchmetrics-0.6.0.tar.gz
 cd vit-pytorch-customized
 pip install -e .
 ```
+
+16. install yaml
+
+```
+pip install pyyaml
+```
+
+17. Debug: 
+
+[W socket.cpp:601] [c10d] The client socket has failed to connect to [localhost]:12321 (errno: 99 - Cannot assign requested address).
+
