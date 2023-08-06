@@ -85,6 +85,7 @@ conda activate ffcv
 6. Install torch 
 ```
 pip3 install torch torchvision torchaudio
+
 ```
 
 
@@ -128,6 +129,7 @@ export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 11. Compile opencv 
 
 
+
 - [SYSTEM Reinstall] install cmake etc
 ```
 apt update && apt install -y cmake g++ wget unzip
@@ -135,6 +137,20 @@ apt update && apt install -y cmake g++ wget unzip
 - Install opencv from source 
 ```
 ```
+# Integreate code from torchinstall section
+
+pip3 install torch torchvision torchaudio
+
+pip3 install cupy-cuda11x
+
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+conda install -c conda-forge libstdcxx-ng -y
+
+pip install numba
+# start opencv
+apt update && apt install -y cmake g++ wget unzip
+
 # Download and unpack sources
 # start from 4:25 - 4:39 finished - install opencv from source takes 14 mins.
 cd /workspace/env/
@@ -155,17 +171,15 @@ make -j8
 make install 
 
 # Configure PKG
-export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/opencv/build/unix-install/  
-or 
+# export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/opencv/build/unix-install/  
+
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/source/lib/pkgconfig
 # LD_LIBRARY_PATH
 # configure LD_library
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
-```
 
-12. Compile libturbojpeg
 
-```
+# Compile libturbojpeg
 
 mkdir -p /workspace/env/Install-libjpeg-turbo/ && cd /workspace/env/Install-libjpeg-turbo/
 wget https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/heads/main.zip
@@ -173,53 +187,45 @@ unzip main.zip
 mv libjpeg-turbo-main libjpeg-turbo
 cd libjpeg-turbo
 
-
 mkdir -p build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/workspace/env/Install-libjpeg-turbo/install/ ..
 make -j8
 make install
 
 # PKG_CONFIG_PATH
-export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/libjpeg-turbo/build/pkgscripts
-or
+# export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/libjpeg-turbo/build/pkgscripts
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/pkgconfig
 # configure LD_library
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
 
-```
-
-13. install ffcv
-
-```
+# install ffcv
 pip install ffcv
-```
 
-13. Download source code for training 
 
-```
+# Download source code for training 
+
+
 cd /workspace/
 git clone https://github.com/Crazy-Jack/ffcv-imagenet-train.git
-```
 
 
-14. install torchmetrics
+# 14. install torchmetrics
 
-```
 pip install /workspace/ffcv-imagenet-train/build_instruction/torchmetrics-0.6.0.tar.gz
-```
 
-15. install local modified modules
 
-```
+# install local modified modules
+
+
 cd /workspace/ffcv-imagenet-train/vit-pytorch-customized
 pip install -e .
-```
 
-16. install yaml
 
-```
+# 16. install yaml
+
+
 pip install pyyaml
-```
+
 
 17. Debug: 
 
