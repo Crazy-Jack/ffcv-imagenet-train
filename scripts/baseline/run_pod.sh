@@ -18,7 +18,7 @@ echo "running non topk";
 python ../../train.py --config-file ../../$name.yaml \
     --data.train_dataset=/workspace/data/train_500_0.50_90.ffcv \
     --data.val_dataset=/workspace/data//val_500_0.50_90.ffcv \
-    --data.num_workers=12 --data.in_memory=1 \
+    --data.num_workers=24 --data.in_memory=1 \
     --logging.folder=./train_results/$name-original \
     --dist.port 12321 \
 
