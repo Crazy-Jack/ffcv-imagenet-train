@@ -1,5 +1,5 @@
 # 8 GPU training (use only 1 for ResNet-18 training)
-export CUDA_VISIBLE_DEVICES=1,2;
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7;
 
 # name="vit-b-configs/vit_b_32_32_epochs_1_gpu_varyingsize_0_base_0";
 name="vit-b-configs/vit_b_150_epochs_pod_dist_gpu_varyingsize_0_base_0";
