@@ -11,7 +11,39 @@ Running
 500 GB Pod Volume
 Volume Path: /workspace
 
-0. System install / second time install
+
+
+-----------------------
+-  Second Time
+-----------------------
+apt-get update && apt-get install -y --no-install-recommends \
+        software-properties-common \
+        build-essential \
+        curl \
+        git \
+        ffmpeg \
+        tmux \
+        cmake \
+        g++ wget unzip \
+        pkg-config \
+        vim
+
+this gives you tmux 
+
+go to a tmux window
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/source/lib/pkgconfig
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/pkgconfig
+
+# configure LD_library
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+
+-----------------------
+- Install from scratch 
+-----------------------
+0. System install 
 ```
 apt-get update && apt-get install -y --no-install-recommends \
         software-properties-common \
@@ -33,6 +65,10 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/ins
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+source /workspace/env/miniconda3/etc/profile.d/conda.sh
+conda init bash
+conda activate ffcv
 
 ```
 
