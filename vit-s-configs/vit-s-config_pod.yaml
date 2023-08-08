@@ -14,7 +14,7 @@ model:
   arch: ViT+S
 resolution:
   end_ramp: 27
-  max_res: 192
+  max_res: 224
   min_res: 192
   start_ramp: 1
 training:
