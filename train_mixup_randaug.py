@@ -446,7 +446,7 @@ class ImageNetTrainer:
                             posemb_type='sincos2d',
                             # posemb_type='learnable',
                             pool_type='gap',
-                            fc_type="fc_mlp")
+                            )
             else:
                 model = ViT(model_name_vit, pretrained=False, image_size=224, topk_layer_name=topk_layer_name, topk_info=topk_info)
 

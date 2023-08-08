@@ -64,7 +64,6 @@ class ViT(nn.Module):
         topk_layer_name: str = 'TopkLayer',
         posemb_type: str = 'learnable',
         pool_type: str = 'tok',
-        fc_type: str = 'fc_linear',
         image_size: Optional[int] = None,
         num_classes: Optional[int] = None,
         topk_info: Optional[str] = None,
@@ -134,21 +133,9 @@ class ViT(nn.Module):
             pre_logits_size = dim
 
         # Classifier head
-        if fc_type == "fc_linear":
-            self.norm = nn.LayerNorm(pre_logits_size, eps=1e-6)
-            self.fc = nn.Linear(pre_logits_size, num_classes)
-        elif fc_type == "fc_mlp":
-            self.norm = nn.LayerNorm(pre_logits_size, eps=1e-6)
-            self.fc = nn.Sequential(
-                nn.Linear(pre_logits_size, pre_logits_size),
-                nn.ReLU(),
-                nn.LayerNorm(pre_logits_size, eps=1e-6),
-                nn.Linear(pre_logits_size, pre_logits_size),
-                nn.ReLU(),
-                nn.LayerNorm(pre_logits_size, eps=1e-6),
-                nn.Linear(pre_logits_size, num_classes),
-            )
-
+        self.norm = nn.LayerNorm(pre_logits_size, eps=1e-6)
+        self.fc = nn.Linear(pre_logits_size, num_classes)
+    
         # Initialize weights
         self.init_weights()
         
@@ -175,11 +162,8 @@ class ViT(nn.Module):
                 if hasattr(m, 'bias') and m.bias is not None:
                     nn.init.normal_(m.bias, std=1e-6)  # nn.init.constant(m.bias, 0)
         self.apply(_init)
-        for m in self.fc.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.constant_(m.weight, 0)
-                nn.init.constant_(m.bias, 0)
-
+        nn.init.constant_(self.fc.weight, 0)
+        nn.init.constant_(self.fc.bias, 0)
         if self.posemb_type == 'learnable':
             nn.init.normal_(self.positional_embedding.pos_embedding, std=0.02)  # _trunc_normal(self.positional_embedding.pos_embedding, std=0.02)
         nn.init.constant_(self.class_token, 0)
