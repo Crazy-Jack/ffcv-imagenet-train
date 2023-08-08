@@ -505,13 +505,13 @@ class ImageNetTrainer:
 
             self.optimizer.zero_grad(set_to_none=True)
             with autocast():
-                # inputs, targets_a, targets_b, lam = mixup_data(images, target, mix_up_alpha)
-                # inputs, targets_a, targets_b = map(Variable, (inputs, targets_a, targets_b))
-                # output = self.model(inputs)
-                # loss_train = mixup_criterion(torch.nn.CrossEntropyLoss(), output, targets_a, targets_b, lam)
+                inputs, targets_a, targets_b, lam = mixup_data(images, target, mix_up_alpha)
+                inputs, targets_a, targets_b = map(Variable, (inputs, targets_a, targets_b))
+                output = self.model(inputs)
+                loss_train = mixup_criterion(torch.nn.CrossEntropyLoss(), output, targets_a, targets_b, lam)
 
-                output = self.model(images)
-                loss_train = self.loss(output, target)
+                # output = self.model(images)
+                # loss_train = self.loss(output, target)
 
             self.scaler.scale(loss_train).backward()
             self.scaler.step(self.optimizer)
