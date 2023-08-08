@@ -6,20 +6,24 @@ from typing import Optional
 import torch
 from torch import nn
 from torch.nn import functional as F
+import numpy as np 
 
 from .transformer import Transformer
-from .utils import load_pretrained_weights, as_tuple, resize_positional_embedding_torch
+from .utils import load_pretrained_weights, as_tuple, resize_positional_embedding_torch, build_2d_sincos_position_embedding
 from .configs import PRETRAINED_MODELS
 
 
 class PositionalEmbedding1D(nn.Module):
     """Adds (optionally learned) positional embeddings to the inputs."""
 
-    def __init__(self, seq_len, dim):
+    def __init__(self, seq_len, dim, type="learnable"):
         super().__init__()
         self.original_seq_len = seq_len
-        self.pos_embedding = nn.Parameter(torch.zeros(1, seq_len, dim))
-    
+        if type == "learnable":
+            self.pos_embedding = nn.Parameter(torch.zeros(1, seq_len, dim))
+        elif type == "sincos2d":
+            self.pos_embedding = build_2d_sincos_position_embedding(self.original_seq_len, dim)
+
     def forward(self, x, has_class_token=True):
         """Input has shape `(batch_size, seq_len, emb_dim)`"""
         ntok_new = x.shape[1]
@@ -28,7 +32,6 @@ class PositionalEmbedding1D(nn.Module):
         else:
             pos_embedding = self.pos_embedding
         return x + pos_embedding
-
 
 class ViT(nn.Module):
     """
@@ -59,6 +62,9 @@ class ViT(nn.Module):
         positional_embedding: str = '1d',
         in_channels: int = 3, 
         topk_layer_name: str = 'TopkLayer',
+        posemb_type: str = 'learnable',
+        pool_type: str = 'tok',
+        fc_type: str = 'fc_linear',
         image_size: Optional[int] = None,
         num_classes: Optional[int] = None,
         topk_info: Optional[str] = None,
@@ -67,9 +73,10 @@ class ViT(nn.Module):
 
         # Configuration
         if name is None:
-            check_msg = 'must specify name of pretrained model'
-            assert not pretrained, check_msg
-            assert not resize_positional_embedding, check_msg
+            # check_msg = 'must specify name of pretrained model'
+            # assert not pretrained, check_msg
+            # assert not resize_positional_embedding, check_msg
+            # assert not check_msg
             if num_classes is None:
                 num_classes = 1000
             if image_size is None:
@@ -109,8 +116,9 @@ class ViT(nn.Module):
             seq_len += 1
         
         # Positional embedding
+        self.posemb_type = posemb_type
         if positional_embedding.lower() == '1d':
-            self.positional_embedding = PositionalEmbedding1D(seq_len, dim)
+            self.positional_embedding = PositionalEmbedding1D(seq_len, dim, type=posemb_type)
         else:
             raise NotImplementedError()
         
@@ -126,8 +134,20 @@ class ViT(nn.Module):
             pre_logits_size = dim
 
         # Classifier head
-        self.norm = nn.LayerNorm(pre_logits_size, eps=1e-6)
-        self.fc = nn.Linear(pre_logits_size, num_classes)
+        if fc_type == "fc_linear":
+            self.norm = nn.LayerNorm(pre_logits_size, eps=1e-6)
+            self.fc = nn.Linear(pre_logits_size, num_classes)
+        elif fc_type == "fc_mlp":
+            self.norm = nn.LayerNorm(pre_logits_size, eps=1e-6)
+            self.fc = nn.Sequential(
+                nn.Linear(pre_logits_size, pre_logits_size),
+                nn.ReLU(),
+                nn.LayerNorm(pre_logits_size, eps=1e-6),
+                nn.Linear(pre_logits_size, pre_logits_size),
+                nn.ReLU(),
+                nn.LayerNorm(pre_logits_size, eps=1e-6),
+                nn.Linear(pre_logits_size, num_classes),
+            )
 
         # Initialize weights
         self.init_weights()
@@ -144,7 +164,9 @@ class ViT(nn.Module):
                 load_repr_layer=load_repr_layer,
                 resize_positional_embedding=(image_size != pretrained_image_size),
             )
-        
+        self.pool_type = pool_type
+
+
     @torch.no_grad()
     def init_weights(self):
         def _init(m):
@@ -153,9 +175,13 @@ class ViT(nn.Module):
                 if hasattr(m, 'bias') and m.bias is not None:
                     nn.init.normal_(m.bias, std=1e-6)  # nn.init.constant(m.bias, 0)
         self.apply(_init)
-        nn.init.constant_(self.fc.weight, 0)
-        nn.init.constant_(self.fc.bias, 0)
-        nn.init.normal_(self.positional_embedding.pos_embedding, std=0.02)  # _trunc_normal(self.positional_embedding.pos_embedding, std=0.02)
+        for m in self.fc.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.constant_(m.weight, 0)
+                nn.init.constant_(m.bias, 0)
+
+        if self.posemb_type == 'learnable':
+            nn.init.normal_(self.positional_embedding.pos_embedding, std=0.02)  # _trunc_normal(self.positional_embedding.pos_embedding, std=0.02)
         nn.init.constant_(self.class_token, 0)
 
     def forward(self, x):
@@ -176,7 +202,11 @@ class ViT(nn.Module):
             x = self.pre_logits(x)
             x = torch.tanh(x)
         if hasattr(self, 'fc'):
-            x = self.norm(x)[:, 0]  # b,d
-            x = self.fc(x)  # b,num_classes
+            if self.pool_type == 'tok':
+                x = self.norm(x)[:, 0]  # b,d
+            elif self.pool_type == 'gap':
+                x = self.norm(x)[:, 1:].mean(dim=1)
+            x = self.fc(x) # b,num_classes
+
         return x
 

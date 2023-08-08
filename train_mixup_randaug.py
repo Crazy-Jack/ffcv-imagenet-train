@@ -2,6 +2,7 @@ import torch as ch
 from torch.cuda.amp import GradScaler
 from torch.cuda.amp import autocast
 import torch.nn.functional as F
+from torch.autograd import Variable
 import torch.distributed as dist
 ch.backends.cudnn.benchmark = True
 ch.autograd.profiler.emit_nvtx(False)
@@ -60,7 +61,7 @@ Section('data', 'data related stuff').params(
 Section('lr', 'lr scheduling').params(
     step_ratio=Param(float, 'learning rate step ratio', default=0.1),
     step_length=Param(int, 'learning rate step length', default=30),
-    lr_schedule_type=Param(OneOf(['step', 'cyclic']), default='cyclic'),
+    lr_schedule_type=Param(OneOf(['step', 'cyclic', 'cosine']), default='cyclic'),
     lr=Param(float, 'learning rate', default=0.5),
     lr_peak_epoch=Param(int, 'Epoch at which LR peaks', default=2),
 )
@@ -80,7 +81,7 @@ Section('validation', 'Validation parameters stuff').params(
 Section('training', 'training hyper param stuff').params(
     eval_only=Param(int, 'eval only?', default=0),
     batch_size=Param(int, 'The batch size', default=512),
-    optimizer=Param(And(str, OneOf(['sgd'])), 'The optimizer', default='sgd'),
+    optimizer=Param(And(str, OneOf(['sgd', 'adam'])), 'The optimizer', default='sgd'),
     momentum=Param(float, 'SGD momentum', default=0.9),
     weight_decay=Param(float, 'weight decay', default=4e-5),
     epochs=Param(int, 'number of epochs', default=30),
@@ -89,11 +90,13 @@ Section('training', 'training hyper param stuff').params(
     use_blurpool=Param(int, 'use blurpool?', default=0),
     topk_info=Param(str, 'topk_info, each digit represent the sparsity level, 0 represent 100%, 1 represent 10%, etc', default=''),
     topk_layer_name=Param(str, 'Topk layer name, specified for which class what to use', default='TopkLayer'),
+    mix_up_alpha=Param(float, 'mixed up alpha', default=0.2),
+
 )
 
 Section('resume', 'training resume with checkpoints').params(
-    optim_ckpt=Param(str, 'checkpoint path.pt'),
-    model_ckpt=Param(str, 'checkpoint path.pt'),
+    optim_ckpt=Param(str, 'checkpoint path.pt', default=""),
+    model_ckpt=Param(str, 'checkpoint path.pt', default=""),
     resume_opt_from_ckpt=Param(int, 'use checkpoint for optimizer?', default=0),
     resume_model_from_ckpt=Param(int, 'use checkpoint for optimizer?', default=0),
     init_eval_checker=Param(int, 'whether to initially check the loaded model', default=0)
@@ -138,6 +141,7 @@ def get_cosine_lr(epoch, lr, epochs, lr_peak_epoch):
         1 + math.cos(math.pi * epoch / epochs)) / 2
     return lr 
 
+
 class BlurPoolConv2d(ch.nn.Module):
     def __init__(self, conv):
         super().__init__()
@@ -151,7 +155,25 @@ class BlurPoolConv2d(ch.nn.Module):
                            groups=self.conv.in_channels, bias=None)
         return self.conv.forward(blurred)
 
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
 
+def mixup_data(x, y, alpha=1.0, use_cuda=True):
+    '''Returns mixed inputs, pairs of targets, and lambda'''
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = x.size()[0]
+    if use_cuda:
+        index = torch.randperm(batch_size).cuda()
+    else:
+        index = torch.randperm(batch_size)
+
+    mixed_x = lam * x + (1 - lam) * x[index, :]
+    y_a, y_b = y, y[index]
+    return mixed_x, y_a, y_b, lam
 
 
 class ImageNetTrainer:
@@ -234,7 +256,7 @@ class ImageNetTrainer:
     @param('resume.optim_ckpt')
     def create_optimizer(self, momentum, optimizer, weight_decay,
                          label_smoothing, resume_opt_from_ckpt, optim_ckpt):
-        assert optimizer == 'sgd'
+        assert optimizer in ['sgd', 'adam']
 
         # Only do weight decay on non-batchnorm parameters
         all_params = list(self.model.named_parameters())
@@ -248,14 +270,18 @@ class ImageNetTrainer:
             'weight_decay': weight_decay
         }]
 
-        self.optimizer = ch.optim.SGD(param_groups, lr=1, momentum=momentum)
+        if optimizer == 'sgd':
+            self.optimizer = ch.optim.SGD(param_groups, lr=1, momentum=momentum)
+        elif optimizer == 'adam':
+            self.optimizer = ch.optim.Adam(param_groups, lr=1e-3, betas=(0.9, 0.999))
+
         if resume_opt_from_ckpt:
             self.log({'message': f"==> Loading optimizer from ckpt {optim_ckpt}!"})
             self.optimizer.load_state_dict(torch.load(optim_ckpt))
         else:
             self.log({'message': f"==> creating optimizer from scratch!"})
             
-        self.loss = ch.nn.CrossEntropyLoss(label_smoothing=label_smoothing)
+        self.loss = ch.nn.CrossEntropyLoss(label_smoothing=label_smoothing) # for eval purpose only
 
     @param('data.train_dataset')
     @param('data.num_workers')
@@ -401,27 +427,6 @@ class ImageNetTrainer:
         if 'vit' in arch.lower():
             model_name_vit = arch.split("+")[1] # B_16_imagenet1k
             
-            
-        
-            """name: Optional[str] = None, 
-            pretrained: bool = False, 
-            patches: int = 16,
-            dim: int = 768,
-            ff_dim: int = 3072,
-            num_heads: int = 12,
-            num_layers: int = 12,
-            attention_dropout_rate: float = 0.0,
-            dropout_rate: float = 0.1,
-            representation_size: Optional[int] = None,
-            load_repr_layer: bool = False,
-            classifier: str = 'token',
-            positional_embedding: str = '1d',
-            in_channels: int = 3, 
-            topk_layer_name: str = 'TopkLayer',
-            image_size: Optional[int] = None,
-            num_classes: Optional[int] = None,
-            topk_info: Optional[str] = None,"""
-
             if model_name_vit == "S":
                 print(f"initializing vit-s...")
                 # vit small
@@ -437,7 +442,10 @@ class ImageNetTrainer:
                             positional_embedding='1d',
                             image_size=224, 
                             topk_layer_name=topk_layer_name, 
-                            topk_info=topk_info)
+                            topk_info=topk_info,
+                            posemb_type='sincos2d',
+                            pool_type='gap',
+                            fc_type="fc_mlp")
             else:
                 model = ViT(model_name_vit, pretrained=False, image_size=224, topk_layer_name=topk_layer_name, topk_info=topk_info)
 
@@ -478,7 +486,8 @@ class ImageNetTrainer:
         return model, scaler
 
     @param('logging.log_level')
-    def train_loop(self, epoch, log_level):
+    @param('training.mix_up_alpha')
+    def train_loop(self, epoch, log_level, mix_up_alpha):
         model = self.model
         model.train()
         losses = []
@@ -495,8 +504,13 @@ class ImageNetTrainer:
 
             self.optimizer.zero_grad(set_to_none=True)
             with autocast():
-                output = self.model(images)
-                loss_train = self.loss(output, target)
+                inputs, targets_a, targets_b, lam = mixup_data(images, target, mix_up_alpha)
+                inputs, targets_a, targets_b = map(Variable, (inputs, targets_a, targets_b))
+                output = self.model(inputs)
+                loss_train = mixup_criterion(torch.nn.CrossEntropyLoss(), output, targets_a, targets_b, lam)
+
+                # output = self.model(images)
+                # loss_train = self.loss(output, target)
 
             self.scaler.scale(loss_train).backward()
             self.scaler.step(self.optimizer)
@@ -511,7 +525,7 @@ class ImageNetTrainer:
 
                 group_lrs = []
                 for _, group in enumerate(self.optimizer.param_groups):
-                    group_lrs.append(f'{group["lr"]:.3f}')
+                    group_lrs.append(f'{group["lr"]:.10f}')
 
                 names = ['ep', 'iter', 'lrs']
                 values = [epoch, ix, group_lrs]

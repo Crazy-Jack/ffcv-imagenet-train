@@ -1,0 +1,4 @@
+{"timestamp": 1691455553.0595076, "relative_time": 0.19451904296875, "message": "==> creating model from scratch!"}
+{"timestamp": 1691455553.1847112, "relative_time": 0.31972265243530273, "message": "==> creating optimizer from scratch!"}
+{"timestamp": 1691455835.175398, "relative_time": 282.31040954589844, "current_lr": 0.0009975928444785173, "top_1": 0.018219999969005585, "top_5": 0.06054000183939934, "val_time": 46.68870949745178, "train_loss": 6.476866528856383, "epoch": 0}
+{"timestamp": 1691456100.66125, "relative_time": 547.796261548996, "current_lr": 0.0009903940789952074, "top_1": 0.022420000284910202, "top_5": 0.07147999852895737, "val_time": 45.766765832901, "train_loss": 6.264351671357616, "epoch": 1}

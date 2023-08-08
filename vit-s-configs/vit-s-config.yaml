@@ -1,0 +1,45 @@
+data:
+  in_memory: 1
+  num_workers: 12
+dist:
+  world_size: 2
+logging:
+  folder: /tmp/
+  log_level: 2
+  save_model_freq: 2
+lr:
+  lr: 0.010
+  lr_schedule_type: cyclic
+model:
+  arch: ViT+B_16_imagenet1k
+resolution:
+  end_ramp: 27
+  max_res: 192
+  min_res: 32
+  start_ramp: 1
+training:
+  batch_size: 400
+  bn_wd: 0
+  distributed: 1
+  epochs: 32
+  label_smoothing: 0.1
+  momentum: 0.9
+  optimizer: sgd
+  weight_decay: 0.0001
+  use_blurpool: 1
+validation:
+  lr_tta: true
+  resolution: 256
+  batch_size: 40
+resume:
+  # optim_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/3c69ef86-20b0-4d9c-8ef3-e9906b3a0e11/weights_ep_2_optimizer.pt
+  # optim_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/c0c63337-01f9-421f-966e-06d929665e2d/weights_ep_10_optimizer.pt
+  # optim_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/68493de9-bc7a-4268-a37f-10dbbc036e97/weights_ep_31_optimizer.pt
+  optim_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/af693d51-6c7e-4630-85a5-501d8a27c906/weights_ep_31_optimizer.pt
+  resume_opt_from_ckpt: 1
+  # model_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/3c69ef86-20b0-4d9c-8ef3-e9906b3a0e11/weights_ep_2.pt
+  # model_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/c0c63337-01f9-421f-966e-06d929665e2d/weights_ep_10.pt
+  # model_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/68493de9-bc7a-4268-a37f-10dbbc036e97/weights_ep_31.pt
+  model_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/af693d51-6c7e-4630-85a5-501d8a27c906/weights_ep_31.pt
+  resume_model_from_ckpt: 1
+  init_eval_checker: 1
