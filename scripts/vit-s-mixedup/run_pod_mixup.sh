@@ -9,7 +9,7 @@ echo "running non topk";
 # Modify `data.in_memory` and `data.num_workers` based on your machine
 python ../../train_mixup_randaug.py --config-file ../../$name.yaml \
     --data.train_dataset=/workspace/data/train_500_0.50_90.ffcv \
-    --data.val_dataset=/workspace/data/ffcv-imagenet/val_500_0.50_90.ffcv \
+    --data.val_dataset=/workspace/data/val_500_0.50_90.ffcv \
     --data.num_workers=24 --data.in_memory=1 \
     --logging.folder=./train_results/$name-original \
     --dist.port 12321 \
