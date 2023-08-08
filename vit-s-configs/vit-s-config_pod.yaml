@@ -8,14 +8,14 @@ logging:
   log_level: 2
   save_model_freq: 4
 lr:
-  lr: 0.001
+  lr: 0.0014
   lr_schedule_type: cosine
 model:
   arch: ViT+S
 resolution:
   end_ramp: 27
   max_res: 192
-  min_res: 32
+  min_res: 192
   start_ramp: 1
 training:
   batch_size: 400
@@ -36,10 +36,12 @@ resume:
   # optim_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/c0c63337-01f9-421f-966e-06d929665e2d/weights_ep_10_optimizer.pt
   # optim_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/68493de9-bc7a-4268-a37f-10dbbc036e97/weights_ep_31_optimizer.pt
   # optim_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/af693d51-6c7e-4630-85a5-501d8a27c906/weights_ep_31_optimizer.pt
+  # optim_ckpt: /workspace/ffcv-imagenet-train/scripts/vit-s-mixedup/train_results/vit-s-configs/vit-s-config_pod-original/b04cf0e9-4c90-40fe-80c7-99cdc3f73708/weights_ep_99_optimizer.pt
   resume_opt_from_ckpt: 0
   # model_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/3c69ef86-20b0-4d9c-8ef3-e9906b3a0e11/weights_ep_2.pt
   # model_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/c0c63337-01f9-421f-966e-06d929665e2d/weights_ep_10.pt
   # model_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/68493de9-bc7a-4268-a37f-10dbbc036e97/weights_ep_31.pt
   # model_ckpt: /home/ylz1122/Fast-ImageNet-Training/ffcv-imagenet/scripts/baseline/train_results/vit-b-configs/vit_b_32_32_epochs_dist_gpu_varyingsize_0_base_0-original/af693d51-6c7e-4630-85a5-501d8a27c906/weights_ep_31.pt
-  resume_model_from_ckpt: 0
+  model_ckpt: /workspace/ffcv-imagenet-train/scripts/vit-s-mixedup/train_results/vit-s-configs/vit-s-config_pod-original/b04cf0e9-4c90-40fe-80c7-99cdc3f73708/weights_ep_99.pt
+  resume_model_from_ckpt: 1
   init_eval_checker: 0

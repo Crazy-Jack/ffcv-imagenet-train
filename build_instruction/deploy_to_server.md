@@ -269,6 +269,11 @@ pip install pyyaml
 
 - solution: need to expose internal TCP port, for example 12321, 12320, etc and use these port when doing distributed training 
 
+18. RandAug
+
+```
+pip install git+https://github.com/ildoonet/pytorch-randaugment
+```
 
 
 
