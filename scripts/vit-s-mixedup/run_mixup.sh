@@ -1,7 +1,7 @@
 # 8 GPU training (use only 1 for ResNet-18 training)
 export CUDA_VISIBLE_DEVICES=1,2;
 
-name="vit-s-configs/vit-s-config_pod";
+name="vit-s-configs/vit-s-config";
 echo "running "$name;
 
 echo "running non topk";

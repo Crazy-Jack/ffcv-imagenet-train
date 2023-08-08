@@ -440,10 +440,11 @@ class ImageNetTrainer:
                             dropout_rate=0.1,
                             classifier='token',
                             positional_embedding='1d',
-                            image_size=224, 
+                            image_size=224,
                             topk_layer_name=topk_layer_name, 
                             topk_info=topk_info,
                             posemb_type='sincos2d',
+                            # posemb_type='learnable',
                             pool_type='gap',
                             fc_type="fc_mlp")
             else:
@@ -504,13 +505,13 @@ class ImageNetTrainer:
 
             self.optimizer.zero_grad(set_to_none=True)
             with autocast():
-                inputs, targets_a, targets_b, lam = mixup_data(images, target, mix_up_alpha)
-                inputs, targets_a, targets_b = map(Variable, (inputs, targets_a, targets_b))
-                output = self.model(inputs)
-                loss_train = mixup_criterion(torch.nn.CrossEntropyLoss(), output, targets_a, targets_b, lam)
+                # inputs, targets_a, targets_b, lam = mixup_data(images, target, mix_up_alpha)
+                # inputs, targets_a, targets_b = map(Variable, (inputs, targets_a, targets_b))
+                # output = self.model(inputs)
+                # loss_train = mixup_criterion(torch.nn.CrossEntropyLoss(), output, targets_a, targets_b, lam)
 
-                # output = self.model(images)
-                # loss_train = self.loss(output, target)
+                output = self.model(images)
+                loss_train = self.loss(output, target)
 
             self.scaler.scale(loss_train).backward()
             self.scaler.step(self.optimizer)
