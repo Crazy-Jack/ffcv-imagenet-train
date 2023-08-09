@@ -461,6 +461,7 @@ class ImageNetTrainer:
             )
             alexnet.features = new_features
             model = alexnet
+            print("Using alexnet 5topk layers")
         
         elif 'resnet50_5layers' in arch.lower():
             raise NotImplementedError
