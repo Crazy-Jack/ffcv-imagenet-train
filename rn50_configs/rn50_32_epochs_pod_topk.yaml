@@ -5,6 +5,7 @@ dist:
   world_size: 8
 logging:
   folder: /tmp/
+  save_model_freq: 5
 lr:
   lr: 1.7
   lr_schedule_type: cyclic
