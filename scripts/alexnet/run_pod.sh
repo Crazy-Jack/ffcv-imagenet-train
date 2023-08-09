@@ -2,7 +2,7 @@
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7;
 
 # name="vit-b-configs/vit_b_32_32_epochs_1_gpu_varyingsize_0_base_0";
-name="alexnet_configs/alexnet_5layers_32_epochs.yaml";
+name="alexnet_configs/alexnet_5layers_32_epochs";
 # name="vit-b-configs/vit_b_16_epochs_dist_gpu_varyingsize_0_topk_1";
 # name="vit-b-configs/vit_b_16_epochs_1_gpu_varyingsize_0_topk_1";
 # name="vit-b-configs/vit_b_16_epochs_1_gpu_varyingsize_1";
