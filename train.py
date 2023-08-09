@@ -9,6 +9,7 @@ ch.autograd.profiler.profile(False)
 
 from torchvision import models
 import torch
+import torch.nn as nn 
 import torchmetrics
 import numpy as np
 import math
@@ -37,6 +38,8 @@ from ffcv.fields.basics import IntDecoder
 
 
 from pytorch_pretrained_vit import ViT
+
+from .topk_layers import TopKLayer
 
 Section('model', 'model details').params(
     arch=Param(str, default='resnet18'),
@@ -89,6 +92,7 @@ Section('training', 'training hyper param stuff').params(
     use_blurpool=Param(int, 'use blurpool?', default=0),
     topk_info=Param(str, 'topk_info, each digit represent the sparsity level, 0 represent 100%, 1 represent 10%, etc', default=''),
     topk_layer_name=Param(str, 'Topk layer name, specified for which class what to use', default='TopkLayer'),
+    alexnet_topk=Param(float, 'alexnet topk, prevent interference', default=0.2),
 )
 
 Section('resume', 'training resume with checkpoints').params(
@@ -396,12 +400,11 @@ class ImageNetTrainer:
     @param('training.topk_layer_name')
     @param('resume.resume_model_from_ckpt')
     @param('resume.model_ckpt')
-    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name):
+    @param('training.alexnet_topk')
+    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name, alexnet_topk):
         scaler = GradScaler()
         if 'vit' in arch.lower():
             model_name_vit = arch.split("+")[1] # B_16_imagenet1k
-            
-            
         
             """name: Optional[str] = None, 
             pretrained: bool = False, 
@@ -440,9 +443,27 @@ class ImageNetTrainer:
                             topk_info=topk_info)
             else:
                 model = ViT(model_name_vit, pretrained=False, image_size=224, topk_layer_name=topk_layer_name, topk_info=topk_info)
-
         
+        elif 'alexnet_5layers' in arch.lower():
+            alexnet = models.alexnet(pretrained=False)
+            new_features = nn.Sequential(
+                # layers up to the point of insertion
+                *(list(alexnet.features.children())[:3]), 
+                TopKLayer(alexnet_topk),
+                *(list(alexnet.features.children())[3:6]),
+                TopKLayer(alexnet_topk),
+                *(list(alexnet.features.children())[6:8]),
+                TopKLayer(alexnet_topk),
+                *(list(alexnet.features.children())[8:10]),
+                TopKLayer(alexnet_topk),
+                *(list(alexnet.features.children())[10:]),
+                TopKLayer(alexnet_topk),
+            )
+            alexnet.features = new_features
+            model = alexnet
         
+        elif 'resnet50_5layers' in arch.lower():
+            raise NotImplementedError
         else:
             model = getattr(models, arch)(pretrained=pretrained)
         
