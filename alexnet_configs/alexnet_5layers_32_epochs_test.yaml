@@ -8,7 +8,7 @@ logging:
   log_level: 2
   save_model_freq: 4
 lr:
-  lr: 0.5
+  lr: 0.01
   lr_schedule_type: cyclic
 model:
   arch: alexnet

@@ -1,6 +1,6 @@
 data:
   in_memory: 1
-  num_workers: 12
+  num_workers: 32
 dist:
   world_size: 8
 logging:
@@ -18,7 +18,7 @@ resolution:
   min_res: 160
   start_ramp: 23
 training:
-  batch_size: 512
+  batch_size: 2048
   bn_wd: 0
   distributed: 1
   epochs: 32
