@@ -2,7 +2,7 @@
 export CUDA_VISIBLE_DEVICES=0,1;
 
 # name="vit-b-configs/vit_b_32_32_epochs_1_gpu_varyingsize_0_base_0";
-name="alexnet_configs/alexnet_5layers_32_epochs_test";
+name="rn50_configs/rn50_32_epochs_topk";
 # name="vit-b-configs/vit_b_16_epochs_dist_gpu_varyingsize_0_topk_1";
 # name="vit-b-configs/vit_b_16_epochs_1_gpu_varyingsize_0_topk_1";
 # name="vit-b-configs/vit_b_16_epochs_1_gpu_varyingsize_1";
@@ -17,8 +17,8 @@ echo "running 5layer topk";
 # Modify `data.in_memory` and `data.num_workers` based on your machine
 python ../../train.py --config-file ../../$name.yaml \
     --data.train_dataset=/workspace/data/train_500_0.50_90.ffcv \
-    --data.val_dataset=/workspace/data//val_500_0.50_90.ffcv \
-    --data.num_workers=12 --data.in_memory=1 \
+    --data.val_dataset=/workspace/data/val_500_0.50_90.ffcv \
+    --data.num_workers=24 --data.in_memory=1 \
     --logging.folder=./train_results/$name-original \
     --dist.port 12321 \
 

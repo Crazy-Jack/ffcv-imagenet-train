@@ -29,8 +29,9 @@ apt-get update && apt-get install -y --no-install-recommends \
         vim
 
 this gives you tmux 
-
+---------
 go to a tmux window
+ENV variable
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/source/lib/pkgconfig
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/pkgconfig
 
@@ -39,6 +40,20 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 
+OR on private server
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/Install-OpenCV-2/source/lib/pkgconfig
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/.local/libturbojpeg-2/lib/pkgconfig
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/Install-OpenCV-2/source/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/.local/libturbojpeg-2/lib
+export LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH
+
+
+----------
+
+source /workspace/env/miniconda3/etc/profile.d/conda.sh
+conda init bash
+conda activate ffcv
 
 -----------------------
 - Install from scratch 
@@ -106,16 +121,14 @@ bash Miniconda3-latest-Linux-x86_64.sh
 source /workspace/env/miniconda3/etc/profile.d/conda.sh
 conda init bash
 conda activate 
+conda create -n ffcv python=3.9 -y
+conda activate ffcv
+
 ```
 
 
 since the /workspace/env is persistence disk, the conda file will be saved 
 
-
-5. conda env
-
-conda create -n ffcv python=3.9 -y
-conda activate ffcv
 
 
 6. Install torch 

@@ -96,7 +96,7 @@ Section('lr', 'lr scheduling').params(
 Section('logging', 'how to log stuff').params(
     folder=Param(str, 'log location', required=True),
     log_level=Param(int, '0 if only at end 1 otherwise', default=1),
-    save_model_freq=Param(int, 'save model epoch frequency', default=-1)
+    save_model_freq=Param(int, 'save model epoch frequency', default=1)
 )
 
 Section('validation', 'Validation parameters stuff').params(
@@ -118,6 +118,7 @@ Section('training', 'training hyper param stuff').params(
     topk_info=Param(str, 'topk_info, each digit represent the sparsity level, 0 represent 100%, 1 represent 10%, etc', default=''),
     topk_layer_name=Param(str, 'Topk layer name, specified for which class what to use', default='TopkLayer'),
     alexnet_topk=Param(float, 'alexnet topk, prevent interference', default=0.2),
+    resnet50_topk=Param(float, 'resnet50 topk, prevent interference', default=0.2),
 )
 
 Section('resume', 'training resume with checkpoints').params(
@@ -426,30 +427,13 @@ class ImageNetTrainer:
     @param('resume.resume_model_from_ckpt')
     @param('resume.model_ckpt')
     @param('training.alexnet_topk')
-    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name, alexnet_topk):
+    @param('training.resnet50_topk')
+    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name, alexnet_topk, resnet50_topk):
         scaler = GradScaler()
         if 'vit' in arch.lower():
             model_name_vit = arch.split("+")[1] # B_16_imagenet1k
         
-            """name: Optional[str] = None, 
-            pretrained: bool = False, 
-            patches: int = 16,
-            dim: int = 768,
-            ff_dim: int = 3072,
-            num_heads: int = 12,
-            num_layers: int = 12,
-            attention_dropout_rate: float = 0.0,
-            dropout_rate: float = 0.1,
-            representation_size: Optional[int] = None,
-            load_repr_layer: bool = False,
-            classifier: str = 'token',
-            positional_embedding: str = '1d',
-            in_channels: int = 3, 
-            topk_layer_name: str = 'TopkLayer',
-            image_size: Optional[int] = None,
-            num_classes: Optional[int] = None,
-            topk_info: Optional[str] = None,"""
-
+            
             if model_name_vit == "S":
                 print(f"initializing vit-s...")
                 # vit small
@@ -488,8 +472,18 @@ class ImageNetTrainer:
             model = alexnet
             print("Using alexnet 5topk layers")
         
-        elif 'resnet50_5layers' in arch.lower():
-            raise NotImplementedError
+        elif 'resnet50_4layers' in arch.lower():
+            
+            resnet50 = models.resnet50(pretrained=False)
+            for name, module in resnet50.named_children():
+                if name in ['layer1', 'layer2', 'layer3','layer4']:
+                    new_module = nn.Sequential(
+                        module,
+                        TopKLayer(resnet50_topk),
+                    )
+                    setattr(resnet50, name, new_module)
+            print("Using alexnet 4topk layers")
+            model = resnet50
         else:
             model = getattr(models, arch)(pretrained=pretrained)
         
