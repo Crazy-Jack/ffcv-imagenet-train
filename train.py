@@ -121,8 +121,8 @@ Section('training', 'training hyper param stuff').params(
 )
 
 Section('resume', 'training resume with checkpoints').params(
-    optim_ckpt=Param(str, 'checkpoint path.pt'),
-    model_ckpt=Param(str, 'checkpoint path.pt'),
+    optim_ckpt=Param(str, 'checkpoint path.pt', default=""),
+    model_ckpt=Param(str, 'checkpoint path.pt', default=""),
     resume_opt_from_ckpt=Param(int, 'use checkpoint for optimizer?', default=0),
     resume_model_from_ckpt=Param(int, 'use checkpoint for optimizer?', default=0),
     init_eval_checker=Param(int, 'whether to initially check the loaded model', default=0)
