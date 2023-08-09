@@ -6,6 +6,7 @@ dist:
 logging:
   folder: /workspace/log
   save_model_freq: 4
+  log_level: 2
 lr:
   lr: 0.5
   lr_schedule_type: cyclic

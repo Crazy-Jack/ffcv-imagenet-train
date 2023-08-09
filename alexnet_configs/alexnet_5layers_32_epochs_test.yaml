@@ -5,12 +5,13 @@ dist:
   world_size: 2
 logging:
   folder: /workspace/log
+  log_level: 2
   save_model_freq: 4
 lr:
   lr: 0.5
   lr_schedule_type: cyclic
 model:
-  arch: alexnet_5layers
+  arch: alexnet
 resolution:
   end_ramp: 27
   max_res: 192
@@ -24,7 +25,7 @@ training:
   label_smoothing: 0.1
   momentum: 0.9
   optimizer: sgd
-  weight_decay: 5e-5
+  weight_decay: 0.0001
   use_blurpool: 1
   alexnet_topk: 0.2
 validation:

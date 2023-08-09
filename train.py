@@ -455,6 +455,7 @@ class ImageNetTrainer:
         
         elif 'alexnet_5layers' in arch.lower():
             alexnet = models.alexnet(pretrained=False)
+            
             new_features = nn.Sequential(
                 # layers up to the point of insertion
                 *(list(alexnet.features.children())[:3]), 
@@ -471,7 +472,10 @@ class ImageNetTrainer:
             alexnet.features = new_features
             model = alexnet
             print("Using alexnet 5topk layers")
-        
+        elif arch.lower() == 'alexnet':
+            alexnet = models.alexnet(pretrained=False)
+            model = alexnet
+
         elif 'resnet50_4layers' in arch.lower():
             
             resnet50 = models.resnet50(pretrained=False)
