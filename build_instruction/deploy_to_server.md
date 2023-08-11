@@ -39,8 +39,10 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/ins
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+# configure MODELVSHUMANDIR for on-fly shape score evaluation
+export MODELVSHUMANDIR=/workspace/ffcv-imagenet-train/model-vs-human
 
-OR on private server
+# OR on private server ==========
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/Install-OpenCV-2/source/lib/pkgconfig
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/.local/libturbojpeg-2/lib/pkgconfig
 
@@ -48,6 +50,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/Install-OpenCV-2/source/li
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/.local/libturbojpeg-2/lib
 export LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH
 
+export MODELVSHUMANDIR=/home/ylz1122/ffcv-imagenet-train/model-vs-human
 
 ----------
 
@@ -275,6 +278,15 @@ pip install -e .
 
 pip install pyyaml
 
+17. Install ModelVsHuman and ShapeBiasEval
+
+cd /workspace/ffcv-imagenet-train/model-vs-human
+pip install -e .
+
+cd /workspace/ffcv-imagenet-train/shape_bias
+pip install -e .
+
+export MODELVSHUMANDIR=/workspace/ffcv-imagenet-train/model-vs-human
 
 17. Debug: 
 
@@ -282,11 +294,12 @@ pip install pyyaml
 
 - solution: need to expose internal TCP port, for example 12321, 12320, etc and use these port when doing distributed training 
 
-18. RandAug
+<!-- 18. RandAug
 
 ```
 pip install git+https://github.com/ildoonet/pytorch-randaugment
 ```
+ -->
 
 
 

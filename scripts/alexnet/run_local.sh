@@ -2,7 +2,8 @@
 export CUDA_VISIBLE_DEVICES=1,2;
 
 # name="vit-b-configs/vit_b_32_32_epochs_1_gpu_varyingsize_0_base_0";
-name="alexnet_configs/alexnet_5layers_32_epochs_test";
+# name="alexnet_configs/alexnet_5layers_32_epochs_test_finetune_alex";
+name="alexnet_configs/alexnet_5layers_32_epochs_test_finetune_alex_2layer";
 # name="vit-b-configs/vit_b_16_epochs_dist_gpu_varyingsize_0_topk_1";
 # name="vit-b-configs/vit_b_16_epochs_1_gpu_varyingsize_0_topk_1";
 # name="vit-b-configs/vit_b_16_epochs_1_gpu_varyingsize_1";
@@ -12,7 +13,7 @@ name="alexnet_configs/alexnet_5layers_32_epochs_test";
 # name="rn50_configs/rn50_24_epochs_1_gpu_0";
 echo "running "$name;
 
-echo "running 5layer topk";
+echo "running layer topk";
 # Set the visible GPUs according to the `world_size` configuration parameter
 # Modify `data.in_memory` and `data.num_workers` based on your machine
 python ../../train.py --config-file ../../$name.yaml \

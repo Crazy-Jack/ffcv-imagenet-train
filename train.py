@@ -36,7 +36,7 @@ from ffcv.fields.rgb_image import CenterCropRGBImageDecoder, \
     RandomResizedCropRGBImageDecoder
 from ffcv.fields.basics import IntDecoder
 
-
+from architecture import *
 from pytorch_pretrained_vit import ViT
 
 class TopKLayer(nn.Module):
@@ -454,7 +454,7 @@ class ImageNetTrainer:
                 model = ViT(model_name_vit, pretrained=False, image_size=224, topk_layer_name=topk_layer_name, topk_info=topk_info)
         
         elif 'alexnet_5layers' in arch.lower():
-            alexnet = models.alexnet(pretrained=False)
+            alexnet = models.alexnet(pretrained=True)
             
             new_features = nn.Sequential(
                 # layers up to the point of insertion
@@ -472,6 +472,26 @@ class ImageNetTrainer:
             alexnet.features = new_features
             model = alexnet
             print("Using alexnet 5topk layers")
+        elif 'alexnet_5layers_finetune' == arch.lower():
+            alexnet = models.alexnet(pretrained=True)
+            new_features = nn.Sequential(
+                # layers up to the point of insertion
+                *(list(alexnet.features.children())[:3]), 
+                TopKLayer(alexnet_topk),
+                *(list(alexnet.features.children())[3:6]),
+                TopKLayer(alexnet_topk),
+                *(list(alexnet.features.children())[6:8]),
+                TopKLayer(alexnet_topk),
+                *(list(alexnet.features.children())[8:10]),
+                TopKLayer(alexnet_topk),
+                *(list(alexnet.features.children())[10:]),
+                TopKLayer(alexnet_topk),
+            )
+            alexnet.features = new_features
+            model = alexnet
+            print("Using alexnet 5topk layers for finetune")
+        elif arch.lower() == 'alexnet_2layer_finetune':
+            model = alexnet_2layer(alexnet_topk, pretrained=True)
         elif arch.lower() == 'alexnet':
             alexnet = models.alexnet(pretrained=False)
             model = alexnet
