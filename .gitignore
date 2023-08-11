@@ -6,3 +6,6 @@ model-vs-human-old/
 model-vs-human.tar
 
 *.tar.gz
+__pycache__/
+
+train_results/
