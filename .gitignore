@@ -4,3 +4,5 @@
 
 model-vs-human-old/
 model-vs-human.tar
+
+*.tar.gz
