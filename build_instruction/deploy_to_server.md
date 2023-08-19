@@ -16,6 +16,7 @@ Volume Path: /workspace
 -----------------------
 -  Second Time
 -----------------------
+```
 apt-get update && apt-get install -y --no-install-recommends \
         software-properties-common \
         build-essential \
@@ -27,22 +28,28 @@ apt-get update && apt-get install -y --no-install-recommends \
         g++ wget unzip \
         pkg-config \
         vim
+```
 
 this gives you tmux 
----------
+
 go to a tmux window
 ENV variable
+```
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/source/lib/pkgconfig
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/pkgconfig
-
+```
 # configure LD_library
+```
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+```
 # configure MODELVSHUMANDIR for on-fly shape score evaluation
+```
 export MODELVSHUMANDIR=/workspace/ffcv-imagenet-train/model-vs-human
-
+```
 # OR on private server ==========
+```
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/Install-OpenCV-2/source/lib/pkgconfig
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/.local/libturbojpeg-2/lib/pkgconfig
 
@@ -51,13 +58,14 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/.local/libturbojpeg-2/lib
 export LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH
 
 export MODELVSHUMANDIR=/home/ylz1122/ffcv-imagenet-train/model-vs-human
+```
 
-----------
-
+# conda
+```
 source /workspace/env/miniconda3/etc/profile.d/conda.sh
 conda init bash
 conda activate ffcv
-
+```
 -----------------------
 - Install from scratch 
 -----------------------
