@@ -296,6 +296,12 @@ pip install -e .
 
 export MODELVSHUMANDIR=/workspace/ffcv-imagenet-train/model-vs-human
 
+
+18. matplotlib
+
+```
+pip install matplotlib
+```
 17. Debug: 
 
 [W socket.cpp:601] [c10d] The client socket has failed to connect to [localhost]:12321 (errno: 99 - Cannot assign requested address).
