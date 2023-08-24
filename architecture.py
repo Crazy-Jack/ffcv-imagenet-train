@@ -1,7 +1,7 @@
-
+from deepcopy import copy
 from torchvision import models
 import torch
-import torch.nn as nn 
+import torch.nn as nn
 
 class TopKLayer(nn.Module):
     def __init__(self, topk=0.1, revert=False):
@@ -28,14 +28,19 @@ class TopKLayer(nn.Module):
         return sparse_x.view(n, c, h, w)
 
     def forward(self, x):
-        return self.sparse_hw(x, self.topk)
+        if not self.training:
+            self.original_x = copy(x)
+        sparse_x = self.sparse_hw(x, self.topk)
+        if not self.training:
+            self.sparse_x = sparse_x
+        return sparse_x
 
 
 def alexnet_5layer(topk, pretrained=True):
     alexnet = models.alexnet(pretrained=pretrained)
     new_features = nn.Sequential(
         # layers up to the point of insertion
-        *(list(alexnet.features.children())[:3]), 
+        *(list(alexnet.features.children())[:3]),
         TopKLayer(topk),
         *(list(alexnet.features.children())[3:6]),
         TopKLayer(topk),
@@ -48,13 +53,13 @@ def alexnet_5layer(topk, pretrained=True):
     )
     alexnet.features = new_features
     model = alexnet
-    return model 
+    return model
 
 def alexnet_2layer(topk, pretrained=True):
     alexnet = models.alexnet(pretrained=pretrained)
     new_features = nn.Sequential(
         # layers up to the point of insertion
-        *(list(alexnet.features.children())[:3]), 
+        *(list(alexnet.features.children())[:3]),
         *(list(alexnet.features.children())[3:6]),
         TopKLayer(topk),
         *(list(alexnet.features.children())[6:8]),
@@ -64,14 +69,14 @@ def alexnet_2layer(topk, pretrained=True):
     )
     alexnet.features = new_features
     model = alexnet
-    return model 
+    return model
 
 
 def alexnet_1layer(topk, pretrained=True):
     alexnet = models.alexnet(pretrained=pretrained)
     new_features = nn.Sequential(
         # layers up to the point of insertion
-        *(list(alexnet.features.children())[:3]), 
+        *(list(alexnet.features.children())[:3]),
         *(list(alexnet.features.children())[3:6]),
         *(list(alexnet.features.children())[6:8]),
         TopKLayer(topk),
@@ -80,4 +85,4 @@ def alexnet_1layer(topk, pretrained=True):
     )
     alexnet.features = new_features
     model = alexnet
-    return model 
+    return model

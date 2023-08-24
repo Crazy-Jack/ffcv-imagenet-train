@@ -9,7 +9,7 @@ ch.autograd.profiler.profile(False)
 
 from torchvision import models
 import torch
-import torch.nn as nn 
+import torch.nn as nn
 import torchmetrics
 import numpy as np
 import math
@@ -38,33 +38,6 @@ from ffcv.fields.basics import IntDecoder
 
 from architecture import *
 from pytorch_pretrained_vit import ViT
-
-class TopKLayer(nn.Module):
-    def __init__(self, topk=0.1, revert=False):
-        super(TopKLayer, self).__init__()
-        self.revert=revert
-        self.topk=topk
-
-    def sparse_hw(self, x, topk):
-        n, c, h, w = x.shape
-        if topk == 1:
-            return x
-        x_reshape = x.view(n, c, h * w)
-        topk_keep_num = int(max(1, topk * h * w))
-        _, index = torch.topk(x_reshape.abs(), topk_keep_num, dim=2)
-        if self.revert:
-            # Useless
-            mask = (torch.ones_like(x_reshape) - torch.zeros_like(x_reshape).scatter_(2, index, 1))
-        else:
-            mask = torch.zeros_like(x_reshape).scatter_(2, index, 1)
-        # print("mask percent: ", mask.mean().item())
-        sparse_x = mask * x_reshape
-
-        # print("sum of x used", tau_x.sum())
-        return sparse_x.view(n, c, h, w)
-
-    def forward(self, x):
-        return self.sparse_hw(x, self.topk)
 
 Section('model', 'model details').params(
     arch=Param(str, default='resnet18'),
@@ -162,11 +135,11 @@ def get_cyclic_lr(epoch, lr, epochs, lr_peak_epoch):
 @param('training.epochs')
 @param('lr.lr_peak_epoch')
 def get_cosine_lr(epoch, lr, epochs, lr_peak_epoch):
-    
+
     eta_min = 0
     lr = eta_min + (lr - eta_min) * (
         1 + math.cos(math.pi * epoch / epochs)) / 2
-    return lr 
+    return lr
 
 class BlurPoolConv2d(ch.nn.Module):
     def __init__(self, conv):
@@ -200,8 +173,8 @@ class ImageNetTrainer:
         self.initialize_logger()
         self.model, self.scaler = self.create_model_and_scaler()
         self.create_optimizer()
-        
-        
+
+
 
     @param('dist.address')
     @param('dist.port')
@@ -209,7 +182,7 @@ class ImageNetTrainer:
     def setup_distributed(self, address, port, world_size):
         os.environ['MASTER_ADDR'] = address
 
-        import socket 
+        import socket
         from contextlib import closing
 
         def find_free_port():
@@ -253,7 +226,7 @@ class ImageNetTrainer:
         # otherwise, linearly interpolate to the nearest multiple of 32
         interp = np.interp([epoch], [start_ramp, end_ramp], [min_res, max_res])
         final_res = int(np.round(interp[0] / 32)) * 32
-        
+
         return final_res
 
     @param('training.momentum')
@@ -284,7 +257,7 @@ class ImageNetTrainer:
             self.optimizer.load_state_dict(torch.load(optim_ckpt))
         else:
             self.log({'message': f"==> creating optimizer from scratch!"})
-            
+
         self.loss = ch.nn.CrossEntropyLoss(label_smoothing=label_smoothing)
 
     @param('data.train_dataset')
@@ -394,12 +367,12 @@ class ImageNetTrainer:
                 }
 
                 self.eval_and_log(extra_dict)
-            
+
             if save_model_freq > 0:
                 if self.gpu == 0 and epoch % save_model_freq == 0 or epoch == (epochs - 1):
                     ch.save(self.model.state_dict(), self.log_folder / f'weights_ep_{epoch}.pt')
                     ch.save(self.optimizer.state_dict(), self.log_folder / f'weights_ep_{epoch}_optimizer.pt')
-            
+
         self.eval_and_log({'epoch':epoch})
         # if self.gpu == 0:
         #     ch.save(self.model.state_dict(), self.log_folder / 'final_weights.pt')
@@ -432,12 +405,12 @@ class ImageNetTrainer:
         scaler = GradScaler()
         if 'vit' in arch.lower():
             model_name_vit = arch.split("+")[1] # B_16_imagenet1k
-        
-            
+
+
             if model_name_vit == "S":
                 print(f"initializing vit-s...")
                 # vit small
-                model = ViT(pretrained=False, 
+                model = ViT(pretrained=False,
                             patches=16,
                             dim=384,
                             ff_dim=1536,
@@ -447,18 +420,18 @@ class ImageNetTrainer:
                             dropout_rate=0.1,
                             classifier='token',
                             positional_embedding='1d',
-                            image_size=224, 
-                            topk_layer_name=topk_layer_name, 
+                            image_size=224,
+                            topk_layer_name=topk_layer_name,
                             topk_info=topk_info)
             else:
                 model = ViT(model_name_vit, pretrained=False, image_size=224, topk_layer_name=topk_layer_name, topk_info=topk_info)
-        
+
         elif 'alexnet_5layers' in arch.lower():
             alexnet = models.alexnet(pretrained=True)
-            
+
             new_features = nn.Sequential(
                 # layers up to the point of insertion
-                *(list(alexnet.features.children())[:3]), 
+                *(list(alexnet.features.children())[:3]),
                 TopKLayer(alexnet_topk),
                 *(list(alexnet.features.children())[3:6]),
                 TopKLayer(alexnet_topk),
@@ -476,7 +449,7 @@ class ImageNetTrainer:
             alexnet = models.alexnet(pretrained=True)
             new_features = nn.Sequential(
                 # layers up to the point of insertion
-                *(list(alexnet.features.children())[:3]), 
+                *(list(alexnet.features.children())[:3]),
                 TopKLayer(alexnet_topk),
                 *(list(alexnet.features.children())[3:6]),
                 TopKLayer(alexnet_topk),
@@ -497,7 +470,7 @@ class ImageNetTrainer:
             model = alexnet
 
         elif 'resnet50_4layers' in arch.lower():
-            
+
             resnet50 = models.resnet50(pretrained=False)
             for name, module in resnet50.named_children():
                 if name in ['layer1', 'layer2', 'layer3','layer4']:
@@ -510,14 +483,14 @@ class ImageNetTrainer:
             model = resnet50
         else:
             model = getattr(models, arch)(pretrained=pretrained)
-        
+
         def apply_blurpool(mod: ch.nn.Module):
             for (name, child) in mod.named_children():
-                if isinstance(child, ch.nn.Conv2d) and (np.max(child.stride) > 1 and child.in_channels >= 16): 
+                if isinstance(child, ch.nn.Conv2d) and (np.max(child.stride) > 1 and child.in_channels >= 16):
                     setattr(mod, name, BlurPoolConv2d(child))
                 else: apply_blurpool(child)
         if use_blurpool: apply_blurpool(model)
-        
+
         if resume_model_from_ckpt:
             self.log({'message': f"==> Loading model ckpt from {model_ckpt}!"})
             checkpoint = torch.load(model_ckpt)
@@ -531,13 +504,13 @@ class ImageNetTrainer:
 
         else:
             self.log({'message': f"==> creating model from scratch!"})
-            
+
         # model = model.to(memory_format=ch.channels_last)
         model = model.to(self.gpu)
 
         if distributed:
             model = ch.nn.parallel.DistributedDataParallel(model, device_ids=[self.gpu])
-        
+
         # model = torch.compile(model)
 
         return model, scaler
@@ -567,7 +540,7 @@ class ImageNetTrainer:
             self.scaler.step(self.optimizer)
             self.scaler.update()
             ### Training end
-            
+
 
             ### Logging start
             if log_level > 0:
@@ -587,15 +560,15 @@ class ImageNetTrainer:
                 msg = ', '.join(f'{n}={v}' for n, v in zip(names, values))
                 iterator.set_description(msg)
 
-                
+
             ### Logging end
             # if ix > 50:
             #     break
-        
+
         if len(losses) != 0:
             return sum(losses) / len(losses) * 1.
 
-            
+
 
 
     @param('validation.lr_tta')
@@ -615,7 +588,7 @@ class ImageNetTrainer:
 
                     loss_val = self.loss(output, target)
                     self.val_meters['loss'](loss_val)
-                    
+
         stats = {k: m.compute().item() for k, m in self.val_meters.items()}
         [meter.reset() for meter in self.val_meters.values()]
         return stats
@@ -643,6 +616,52 @@ class ImageNetTrainer:
             with open(folder / 'params.json', 'w+') as handle:
                 json.dump(params, handle)
 
+
+    # [ v ] add .sparse_x and .origin_x to TopKLayer
+    def log_vis_gram(self):
+        img = Image.open("/workspace/ffcv-imagenet-train/airplane1-chair2.png")
+        tfms = transforms.Compose([transforms.Resize(224), transforms.ToTensor(), transforms.Normalize([0.5,], [0.5,])])
+        img = tfms(img).unsqueeze(0)
+        assert self.gpu == 0
+        img = img.to("cuda:0")
+
+        # eval model
+        self.model.eval()
+        output = self.model(img)
+
+        # get activation
+        layer_sparse_activation = {}
+        layer_original_activation = {}
+        for name, m in model.features.named_children():
+            if isinstance(m, TopKLayer):
+                layer_sparse_activation[name] = m.sparse_x
+                layer_original_activation[name] = m.original_x
+        # plot
+        def plot(layer_sparse_activation, log_dir, title):
+            for layer in layer_sparse_activation:
+                target_tensor = layer_sparse_activation[layer]
+                n, c, h, w = target_tensor.shape
+                target_tensor = target_tensor.reshape(n * c, h * w)
+                # target_tensor = torch.nn.functional.normalize(target_tensor, dim=1)
+                Gram = torch.matmul(target_tensor, target_tensor.T).cpu()
+                Gram = Gram.unsqueeze(0).repeat(3, 1, 1)
+                grid_img = torchvision.utils.make_grid(Gram, nrow=1)
+                plt.clf()
+                plt.imshow(grid_img.permute(1, 2, 0))
+                title_i = os.path.join(log_dir, f"{title}_layer_{layer}_{int(time.time())}")
+                plt.savefig(f"{title_i}.png")
+                # tensor
+                torch.save(Gram, f"{title_i}.pt")
+
+
+        vis_dir = os.path.join(self.log_dir, 'vis')
+        os.makedirs(vis_dir, exist_ok=True)
+        plot(layer_sparse_activation, vis_dir, "sparse")
+        plot(layer_original_activation, vis_dir, "origin")
+
+
+
+
     def log(self, content):
         print(f'=> Log: {content}')
         if self.gpu != 0: return
@@ -654,6 +673,8 @@ class ImageNetTrainer:
                 **content
             }) + '\n')
             fd.flush()
+        if self.gpu == 0:
+            self.log_vis_gram()
 
     @classmethod
     @param('training.distributed')
