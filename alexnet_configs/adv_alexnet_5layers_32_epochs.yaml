@@ -1,0 +1,36 @@
+data:
+  in_memory: 1
+  num_workers: 24
+dist:
+  world_size: 1
+logging:
+  folder: /workspace/log
+  save_model_freq: -1
+  log_level: 2
+lr:
+  lr: 0.01
+  lr_schedule_type: cyclic
+model:
+  arch: alexnet_5layers_finetune
+resolution:
+  end_ramp: 27
+  max_res: 224
+  min_res: 224
+  start_ramp: 23
+training:
+  batch_size: 1024
+  bn_wd: 0
+  distributed: 1
+  epochs: 32
+  label_smoothing: 0.1
+  momentum: 0.9
+  optimizer: sgd
+  weight_decay: 5e-5
+  use_blurpool: 0
+  alexnet_topk: 1.
+  attack_eps: 3.0
+validation:
+  lr_tta: true
+  resolution: 256
+resume:
+  init_eval_checker: 1

@@ -1,4 +1,4 @@
-from deepcopy import copy
+from copy import copy
 from torchvision import models
 import torch
 import torch.nn as nn

@@ -6,6 +6,8 @@ import torch.distributed as dist
 ch.backends.cudnn.benchmark = True
 ch.autograd.profiler.emit_nvtx(False)
 ch.autograd.profiler.profile(False)
+from PIL import Image
+from torchvision import transforms
 
 from torchvision import models
 import torch
@@ -92,6 +94,7 @@ Section('training', 'training hyper param stuff').params(
     topk_layer_name=Param(str, 'Topk layer name, specified for which class what to use', default='TopkLayer'),
     alexnet_topk=Param(float, 'alexnet topk, prevent interference', default=0.2),
     resnet50_topk=Param(float, 'resnet50 topk, prevent interference', default=0.2),
+    attack_eps=Param(float, 'resnet50 topk, prevent interference', default=0.0),
 )
 
 Section('resume', 'training resume with checkpoints').params(
@@ -113,13 +116,24 @@ IMAGENET_STD = np.array([0.229, 0.224, 0.225]) * 255
 DEFAULT_CROP_RATIO = 224/256
 
 
-def denorm(batch, mean=[0.5], std=[0.5]):
+def denorm(batch, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
     device = batch.device
     if isinstance(mean, list):
         mean = torch.tensor(mean).to(device)
     if isinstance(std, list):
         std = torch.tensor(std).to(device)
     return batch * std.view(1, -1, 1, 1) + mean.view(1, -1, 1, 1)
+
+
+def fgsm_attack(image, epsilon, data_grad):
+    # Collect the element-wise sign of the data gradient
+    sign_data_grad = data_grad.sign()
+    # Create the perturbed image by adjusting each pixel of the input image
+    perturbed_image = image + epsilon*sign_data_grad
+    #  Adding clipping to maintain [0,1] range
+    perturbed_image = torch.clamp(perturbed_image, 0, 1)
+    # Return the perturbed image
+    return perturbed_image
 
 
 @param('lr.lr')
@@ -527,7 +541,7 @@ class ImageNetTrainer:
 
     @param('logging.log_level')
     @param('training.attack_eps')
-    def train_loop(self, epoch, log_level):
+    def train_loop(self, epoch, log_level, attack_eps):
         model = self.model
         model.train()
         losses = []
@@ -547,20 +561,20 @@ class ImageNetTrainer:
             with autocast():
                 output = self.model(images)
                 loss_train = self.loss(output, target)
-
-            self.scaler.scale(loss_train).backward()
-            data_grad = images.grad.data.float()
-            data_denorm = denorm(images)
-            perturbed_data = fgsm_attack(data_denorm, epsilon, data_grad)
-            perturbed_data_normalized = transforms.Normalize((0.5,), (0.5,))(perturbed_data)
+                loss_train.backward()
+                data_grad = images.grad.data
+                data_denorm = denorm(images)
+                perturbed_data = fgsm_attack(data_denorm, attack_eps, data_grad)
+                perturbed_data_normalized = transforms.Normalize((0.5,), (0.5,))(perturbed_data)
 
             self.model.zero_grad()
+            self.optimizer.zero_grad(set_to_none=True)
+
             with autocast():
                 output = self.model(perturbed_data_normalized)
                 loss_train_adv = self.loss(output, target)
 
             self.scaler.scale(loss_train_adv).backward()
-            self.optimizer.zero_grad(set_to_none=True)
             self.scaler.step(self.optimizer)
             self.scaler.update()
             ### Training end
@@ -658,7 +672,7 @@ class ImageNetTrainer:
         # get activation
         layer_sparse_activation = {}
         layer_original_activation = {}
-        for name, m in model.features.named_children():
+        for name, m in self.model.module.features.named_children():
             if isinstance(m, TopKLayer):
                 layer_sparse_activation[name] = m.sparse_x
                 layer_original_activation[name] = m.original_x
@@ -699,7 +713,7 @@ class ImageNetTrainer:
                 **content
             }) + '\n')
             fd.flush()
-        if self.gpu == 0:
+        if self.gpu == 0 and hasattr(self, 'model') and hasattr(self, 'log_dir'):
             self.log_vis_gram()
 
     @classmethod

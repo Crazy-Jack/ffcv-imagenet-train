@@ -7,6 +7,8 @@ ch.backends.cudnn.benchmark = True
 ch.autograd.profiler.emit_nvtx(False)
 ch.autograd.profiler.profile(False)
 
+from PIL import Image
+
 from torchvision import models
 import torch
 import torch.nn as nn
