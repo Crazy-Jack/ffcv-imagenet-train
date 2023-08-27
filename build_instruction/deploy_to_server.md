@@ -137,7 +137,7 @@ bash Miniconda3-latest-Linux-x86_64.sh
 >>> /workspace/env/miniconda3
 
 # the following activates conda everything you exit and re-enter 
-```
+
 source /workspace/env/miniconda3/etc/profile.d/conda.sh
 conda init bash
 conda activate 
