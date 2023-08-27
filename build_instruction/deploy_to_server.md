@@ -110,6 +110,7 @@ conda activate ffcv
 0. download the dataset 
 
 Use backblaze for cheap version of S3
+```
 mkdir -p /workspace/data && cd /workspace/data
 wget https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
 mv b2-linux b2
@@ -126,7 +127,7 @@ Backblaze application key:
 ```
 --------------------
 
-```
+
 1. Install conda 
 ```
 mkdir -p /workspace/env/ && cd /workspace/env/
