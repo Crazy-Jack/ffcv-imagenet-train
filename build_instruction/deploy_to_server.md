@@ -44,6 +44,11 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 ```
+
+# configure CUDA
+```
+export PATH="/usr/local/cuda/bin:$PATH"
+```
 # configure MODELVSHUMANDIR for on-fly shape score evaluation
 ```
 export MODELVSHUMANDIR=/workspace/ffcv-imagenet-train/model-vs-human
