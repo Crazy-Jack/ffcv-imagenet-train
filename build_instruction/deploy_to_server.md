@@ -55,8 +55,18 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/.local/libturbojpeg-2/lib/
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/Install-OpenCV-2/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/.local/libturbojpeg-2/lib
-export LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH
+```
 
+
+# CUDA 
+```
+export LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH
+or
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+```
+
+# Package specific
+```
 export MODELVSHUMANDIR=/home/ylz1122/ffcv-imagenet-train/model-vs-human
 ```
 
