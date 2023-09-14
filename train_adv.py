@@ -6,8 +6,8 @@ import torch.distributed as dist
 ch.backends.cudnn.benchmark = True
 ch.autograd.profiler.emit_nvtx(False)
 ch.autograd.profiler.profile(False)
-
 from PIL import Image
+from torchvision import transforms
 
 from torchvision import models
 import torch
@@ -41,14 +41,6 @@ from ffcv.fields.basics import IntDecoder
 from architecture import *
 from pytorch_pretrained_vit import ViT
 
-<<<<<<< HEAD
-from torchvision import transforms
-from PIL import Image
-import torchvision
-import matplotlib.pyplot as plt
-
-=======
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
 Section('model', 'model details').params(
     arch=Param(str, default='resnet18'),
     pretrained=Param(int, 'is pretrained? (1/0)', default=0)
@@ -71,7 +63,7 @@ Section('data', 'data related stuff').params(
 Section('lr', 'lr scheduling').params(
     step_ratio=Param(float, 'learning rate step ratio', default=0.1),
     step_length=Param(int, 'learning rate step length', default=30),
-    lr_schedule_type=Param(OneOf(['step', 'cyclic', 'cosine']), default='cyclic'),
+    lr_schedule_type=Param(OneOf(['step', 'cyclic']), default='cyclic'),
     lr=Param(float, 'learning rate', default=0.5),
     lr_peak_epoch=Param(int, 'Epoch at which LR peaks', default=2),
 )
@@ -102,12 +94,7 @@ Section('training', 'training hyper param stuff').params(
     topk_layer_name=Param(str, 'Topk layer name, specified for which class what to use', default='TopkLayer'),
     alexnet_topk=Param(float, 'alexnet topk, prevent interference', default=0.2),
     resnet50_topk=Param(float, 'resnet50 topk, prevent interference', default=0.2),
-    vgg_topk=Param(float, 'VGG topk, prevent interference', default=0.2),
-    l1_sparsity_lamda=Param(float, '', default=0),
-    topk_tau=Param(float, 'topk tau - the weight that would determine how mauch original activation want to keep, 1 is all and 0 is topk only', default=0.),
-    scramble_reverse_weight=Param(float, 'weight of how much reverse optimization would weight', default=1e-3),
-    scramble_reverse_lr_scale=Param(float, 'downscale the scamble down scale', default=1e-2),
-    topk_decay_ramp=Param(float, 'topk decay ramp?', default=1e+4),
+    attack_eps=Param(float, 'resnet50 topk, prevent interference', default=0.0),
 )
 
 Section('resume', 'training resume with checkpoints').params(
@@ -127,6 +114,27 @@ Section('dist', 'distributed training options').params(
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406]) * 255
 IMAGENET_STD = np.array([0.229, 0.224, 0.225]) * 255
 DEFAULT_CROP_RATIO = 224/256
+
+
+def denorm(batch, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    device = batch.device
+    if isinstance(mean, list):
+        mean = torch.tensor(mean).to(device)
+    if isinstance(std, list):
+        std = torch.tensor(std).to(device)
+    return batch * std.view(1, -1, 1, 1) + mean.view(1, -1, 1, 1)
+
+
+def fgsm_attack(image, epsilon, data_grad):
+    # Collect the element-wise sign of the data gradient
+    sign_data_grad = data_grad.sign()
+    # Create the perturbed image by adjusting each pixel of the input image
+    perturbed_image = image + epsilon*sign_data_grad
+    #  Adding clipping to maintain [0,1] range
+    perturbed_image = torch.clamp(perturbed_image, 0, 1)
+    # Return the perturbed image
+    return perturbed_image
+
 
 @param('lr.lr')
 @param('lr.step_ratio')
@@ -267,7 +275,6 @@ class ImageNetTrainer:
             'weight_decay': weight_decay
         }]
 
-        # print(param_groups)
         self.optimizer = ch.optim.SGD(param_groups, lr=1, momentum=momentum)
         if resume_opt_from_ckpt:
             self.log({'message': f"==> Loading optimizer from ckpt {optim_ckpt}!"})
@@ -361,16 +368,6 @@ class ImageNetTrainer:
                         distributed=distributed)
         return loader
 
-    @param('training.l1_sparsity_lamda')
-    def l1_loss_func(self, model, l1_sparsity_lamda):
-        if l1_sparsity_lamda > 0:
-            l1_loss = []
-            for module in model.modules():
-                if not isinstance(module, nn.Sequential):
-                    if isinstance(module, TopKLayer):
-                        l1_loss.append(module.prev_x.unsqueeze(0))
-            return torch.cat(l1_loss).sum() * l1_sparsity_lamda
-            
     @param('training.epochs')
     @param('logging.log_level')
     @param('logging.save_model_freq')
@@ -380,15 +377,11 @@ class ImageNetTrainer:
         if init_eval_checker:
             # check the acc
             self.eval_and_log({'epoch':-1})
-            self.best_stats['top_1'] = 0.
-            self.best_stats['top_5'] = 0.
 
         for epoch in range(epochs):
-            self.curr_epoch = epoch
             res = self.get_resolution(epoch)
             print(f"Resultion at epoch {epoch} is {res}")
             self.decoder.output_size = (res, res)
-
             train_loss = self.train_loop(epoch)
 
             if log_level > 0:
@@ -397,21 +390,6 @@ class ImageNetTrainer:
                     'epoch': epoch
                 }
 
-<<<<<<< HEAD
-                save_or_not = self.eval_and_log(extra_dict)
-            
-                if save_model_freq > 0 and epoch > 0:
-                    if self.gpu == 0 and (epoch % save_model_freq == 0 or epoch == (epochs - 1)):
-                        ch.save(self.model.state_dict(), self.log_folder / f'weights_ep_{epoch}.pt')
-                        ch.save(self.optimizer.state_dict(), self.log_folder / f'weights_ep_{epoch}_optimizer.pt')
-                
-                if save_model_freq == -1: # save the best eval models
-                    if self.gpu == 0 and save_or_not:
-                        print(f"Saving the new best results to {self.log_folder}")
-                        ch.save(self.model.state_dict(), self.log_folder / f'weights_best.pt')
-                        ch.save(self.optimizer.state_dict(), self.log_folder / f'weights_best_optimizer.pt')
-                
-=======
                 self.eval_and_log(extra_dict)
 
             if save_model_freq > 0:
@@ -419,7 +397,6 @@ class ImageNetTrainer:
                     ch.save(self.model.state_dict(), self.log_folder / f'weights_ep_{epoch}.pt')
                     ch.save(self.optimizer.state_dict(), self.log_folder / f'weights_ep_{epoch}_optimizer.pt')
 
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
         self.eval_and_log({'epoch':epoch})
         # if self.gpu == 0:
         #     ch.save(self.model.state_dict(), self.log_folder / 'final_weights.pt')
@@ -428,26 +405,15 @@ class ImageNetTrainer:
         start_val = time.time()
         stats = self.val_loop()
         val_time = time.time() - start_val
-
-        # determine to save or not
-        if stats['top_1'] > self.best_stats['top_1']:
-            save_or_not = True 
-            self.best_stats['top_1'] = stats['top_1']
-            self.best_stats['top_5'] = stats['top_5']
-        else:
-            save_or_not = False
         if self.gpu == 0:
             self.log(dict({
                 'current_lr': self.optimizer.param_groups[0]['lr'],
-                'best_top_1': self.best_stats['top_1'],
-                'current_top_1': stats['top_1'],
-                'current_top_5': stats['top_5'],
-                'best_top_5': self.best_stats['top_5'],
+                'top_1': stats['top_1'],
+                'top_5': stats['top_5'],
                 'val_time': val_time
-            }, **extra_dict), vis=True)
-        
-        return save_or_not
+            }, **extra_dict))
 
+        return stats
 
     @param('model.arch')
     @param('model.pretrained')
@@ -458,13 +424,10 @@ class ImageNetTrainer:
     @param('resume.resume_model_from_ckpt')
     @param('resume.model_ckpt')
     @param('training.alexnet_topk')
-    @param('training.topk_tau')
     @param('training.resnet50_topk')
-    @param('training.topk_decay_ramp')
-    @param('training.vgg_topk')
-    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name, alexnet_topk, resnet50_topk, topk_tau, vgg_topk, topk_decay_ramp):
+    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name, alexnet_topk, resnet50_topk):
         scaler = GradScaler()
-        if 'vit' == arch.lower()[:3]:
+        if 'vit' in arch.lower():
             model_name_vit = arch.split("+")[1] # B_16_imagenet1k
 
 
@@ -486,15 +449,6 @@ class ImageNetTrainer:
                             topk_info=topk_info)
             else:
                 model = ViT(model_name_vit, pretrained=False, image_size=224, topk_layer_name=topk_layer_name, topk_info=topk_info)
-<<<<<<< HEAD
-        
-        elif 'alexnet_5layers' == arch.lower():
-            model = alexnet_5layer(alexnet_topk, pretrained=False, topk_tau=topk_tau)
-            print("Using alexnet 5topk layers")
-        elif 'alexnet_5layers_finetune' == arch.lower():
-            # model = models.alexnet(pretrained=True)
-            model = alexnet_5layer(alexnet_topk, pretrained=True, topk_tau=topk_tau)
-=======
 
         elif 'alexnet_5layers' in arch.lower():
             alexnet = models.alexnet(pretrained=True)
@@ -532,54 +486,13 @@ class ImageNetTrainer:
             )
             alexnet.features = new_features
             model = alexnet
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
             print("Using alexnet 5topk layers for finetune")
-        elif 'alexnet_5layers_finetune_perm' == arch.lower():
-            model = alexnet_5layer(alexnet_topk, pretrained=True, topk_tau=topk_tau, permutate=1)
-            print("Using alexnet 5topk layers for finetune")
-        elif 'alexnet_5layers_finetune_se' == arch.lower():
-            model = alexnet_5layer(alexnet_topk, pretrained=True, topk_tau=topk_tau, take_se_channel=1)
-            print("Using alexnet 5topk layers for finetune take_se_channel=1")
-        
-        elif 'alexnet_5layers_finetune_x3_activation' == arch.lower():
-            model = alexnet_5layer(alexnet_topk, pretrained=True, topk_tau=topk_tau, activation='x3')
-            print("Using alexnet 5topk layers for activation x3")
-
-        elif 'alexnet_5layers_se' == arch.lower():
-            model = alexnet_5layer(alexnet_topk, pretrained=False, topk_tau=topk_tau, take_se_channel=1)
-            print("Using alexnet 5topk layers for scratch take_se_channel=1")
-        
-        elif arch.lower() == 'alexnet_2layer':
-            model = alexnet_2layer(alexnet_topk, pretrained=False, topk_tau=topk_tau)
-        
         elif arch.lower() == 'alexnet_2layer_finetune':
-            model = alexnet_2layer(alexnet_topk, pretrained=True, topk_tau=topk_tau)
-        
-        elif arch.lower() == 'vgg_5layers':
-            model = topK_VGG_5layers(vgg_topk, pretrained=False, topk_tau=topk_tau)
-        
-        elif arch.lower() == 'vgg_5layers_finetune':
-            model = topK_VGG_5layers(vgg_topk, pretrained=True, topk_tau=topk_tau)
-        elif arch.lower() == 'ensemblealexnet5layertopk':
-            model = EnsembleAlexNet5layerTopK(alexnet_topk)
-
-
+            model = alexnet_2layer(alexnet_topk, pretrained=True)
         elif arch.lower() == 'alexnet':
             alexnet = models.alexnet(pretrained=False)
             model = alexnet
 
-<<<<<<< HEAD
-        elif 'resnet50_4layers_finetune' == arch.lower():
-            model = topK_resnet50(resnet50_topk, topk_tau=topk_tau, pretrained=True)
-        
-        elif 'resnet50_4layers_finetune_cosinetopkdecay' == arch.lower():
-            model = topK_resnet50(resnet50_topk, topk_tau=topk_tau, pretrained=True, topk_decay_method='cosine', topk_decay_ramp=topk_decay_ramp)
-
-        elif 'resnet50_1layer_finetune' == arch.lower():
-            model = topK_resnet50_1layer(resnet50_topk, topk_tau=topk_tau, pretrained=True)
-
-
-=======
         elif 'resnet50_4layers' in arch.lower():
 
             resnet50 = models.resnet50(pretrained=False)
@@ -592,7 +505,6 @@ class ImageNetTrainer:
                     setattr(resnet50, name, new_module)
             print("Using alexnet 4topk layers")
             model = resnet50
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
         else:
             model = getattr(models, arch)(pretrained=pretrained)
 
@@ -628,8 +540,8 @@ class ImageNetTrainer:
         return model, scaler
 
     @param('logging.log_level')
-    @param('training.l1_sparsity_lamda')
-    def train_loop(self, epoch, log_level, l1_sparsity_lamda):
+    @param('training.attack_eps')
+    def train_loop(self, epoch, log_level, attack_eps):
         model = self.model
         model.train()
         losses = []
@@ -644,18 +556,25 @@ class ImageNetTrainer:
             for param_group in self.optimizer.param_groups:
                 param_group['lr'] = lrs[ix]
 
-            self.optimizer.zero_grad(set_to_none=True)
+            images.requires_grad = True
+            self.model.zero_grad()
             with autocast():
                 output = self.model(images)
                 loss_train = self.loss(output, target)
+                loss_train.backward()
+                data_grad = images.grad.data
+                data_denorm = denorm(images)
+                perturbed_data = fgsm_attack(data_denorm, attack_eps, data_grad)
+                perturbed_data_normalized = transforms.Normalize((0.5,), (0.5,))(perturbed_data)
 
-                if l1_sparsity_lamda > 0:
-                    l1_loss = self.l1_loss_func(self.model)
-                    if l1_loss:
-                        loss_train += l1_loss
+            self.model.zero_grad()
+            self.optimizer.zero_grad(set_to_none=True)
 
+            with autocast():
+                output = self.model(perturbed_data_normalized)
+                loss_train_adv = self.loss(output, target)
 
-            self.scaler.scale(loss_train).backward()
+            self.scaler.scale(loss_train_adv).backward()
             self.scaler.step(self.optimizer)
             self.scaler.update()
             ### Training end
@@ -675,10 +594,8 @@ class ImageNetTrainer:
                 if log_level > 1:
                     names += ['loss']
                     values += [f'{loss_train.item():.3f}']
-                    if l1_sparsity_lamda > 0:
-                        names += ['l1 loss']
-                        values += [f'{l1_loss.item():.3f}']
-                        
+                    names += ['loss_adv']
+                    values += [f'{loss_train_adv.item():.3f}']
 
                 msg = ', '.join(f'{n}={v}' for n, v in zip(names, values))
                 iterator.set_description(msg)
@@ -696,7 +613,6 @@ class ImageNetTrainer:
 
     @param('validation.lr_tta')
     def val_loop(self, lr_tta):
-      
         model = self.model
         model.eval()
 
@@ -712,13 +628,7 @@ class ImageNetTrainer:
 
                     loss_val = self.loss(output, target)
                     self.val_meters['loss'](loss_val)
-<<<<<<< HEAD
-                    
 
-        # add evaluation of shape bias 
-=======
-
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
         stats = {k: m.compute().item() for k, m in self.val_meters.items()}
         [meter.reset() for meter in self.val_meters.values()]
         return stats
@@ -729,12 +639,6 @@ class ImageNetTrainer:
             'top_1': torchmetrics.Accuracy(compute_on_step=False).to(self.gpu),
             'top_5': torchmetrics.Accuracy(compute_on_step=False, top_k=5).to(self.gpu),
             'loss': MeanScalarMetric(compute_on_step=False).to(self.gpu)
-        }
-
-        self.best_stats = {
-            'top_1': 0.,
-            'top_5': 0.,
-            'loss': 0.
         }
 
         if self.gpu == 0:
@@ -752,40 +656,6 @@ class ImageNetTrainer:
             with open(folder / 'params.json', 'w+') as handle:
                 json.dump(params, handle)
 
-<<<<<<< HEAD
-    def val_image_feature_maps(self, dir, cur_time):
-        
-        img_ = Image.open("/home/ylz1122/ffcv-imagenet-train/airplane1-chair2.png")
-        tfms = transforms.Compose([transforms.Resize(224), transforms.ToTensor(), transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),])
-        img = tfms(img_).unsqueeze(0)
-        img = img.to("cuda:0")
-        self.model.eval()
-        with torch.no_grad():
-            outputs = self.model(img)
-        
-        layer_sparse_activation = {}
-        for name, m in self.model.module.features.named_children():
-            if isinstance(m, TopKLayer):
-                layer_sparse_activation[name] = m.sparse_x.detach().cpu()
-        target_tensor = layer_sparse_activation['3']
-        target_tensor = target_tensor.squeeze(0).unsqueeze(1).repeat(1, 3, 1, 1)#.mean(0, keepdim=True)
-        img_size = (img.shape[-2], img.shape[-1])
-        target_tensor = torch.nn.functional.interpolate(target_tensor, size=img_size)
-        n, c, h, w = target_tensor.shape
-        target_tensor = target_tensor / target_tensor.max()
-        target_tensor = target_tensor.add(1).mul(0.5)
-        grid_img = torchvision.utils.make_grid(target_tensor, nrow=5)
-        plt.clf()
-        plt.figure(figsize=(50, 50))
-        # plt.figure(figsize=(10, 10))
-        plt.imshow(grid_img.permute(1, 2, 0))
-        os.makedirs(os.path.join(dir, "vis"), exist_ok=True)
-        plt.savefig(os.path.join(dir, "vis", f"vis_layer_3_{cur_time}.png"))
-        print(f"==> Log visualization in {os.path.join(dir, 'vis')}")
-        
-        
-    def log(self, content, vis=False):
-=======
 
     # [ v ] add .sparse_x and .origin_x to TopKLayer
     def log_vis_gram(self):
@@ -802,7 +672,7 @@ class ImageNetTrainer:
         # get activation
         layer_sparse_activation = {}
         layer_original_activation = {}
-        for name, m in model.features.named_children():
+        for name, m in self.model.module.features.named_children():
             if isinstance(m, TopKLayer):
                 layer_sparse_activation[name] = m.sparse_x
                 layer_original_activation[name] = m.original_x
@@ -833,7 +703,6 @@ class ImageNetTrainer:
 
 
     def log(self, content):
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
         print(f'=> Log: {content}')
         if self.gpu != 0: return
         cur_time = time.time()
@@ -844,16 +713,8 @@ class ImageNetTrainer:
                 **content
             }) + '\n')
             fd.flush()
-<<<<<<< HEAD
-        
-        # handle the img log
-        if vis:
-            self.val_image_feature_maps(self.log_folder, cur_time)
-        
-=======
-        if self.gpu == 0:
+        if self.gpu == 0 and hasattr(self, 'model') and hasattr(self, 'log_dir'):
             self.log_vis_gram()
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
 
     @classmethod
     @param('training.distributed')
@@ -908,6 +769,5 @@ def make_config(quiet=False):
         config.summary()
 
 if __name__ == "__main__":
-
     make_config()
     ImageNetTrainer.launch_from_args()

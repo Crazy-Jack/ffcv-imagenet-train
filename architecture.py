@@ -1,4 +1,4 @@
-
+from copy import copy
 from torchvision import models
 import torch
 import torch.nn as nn 
@@ -179,6 +179,12 @@ class TopKLayer(nn.Module):
         return x
     
     def forward(self, x):
+        if not self.training:
+            self.original_x = copy(x)
+        sparse_x = self.sparse_hw(x, self.topk)
+        if not self.training:
+            self.sparse_x = sparse_x
+        return sparse_x
 
         self.topk_decay_step()
         # print(f"self.topk {self.topk}")
@@ -226,13 +232,13 @@ def alexnet_5layer(topk, pretrained=True, topk_tau=0., permutate=0, **kwags): #t
     )
     alexnet.features = new_features
     model = alexnet
-    return model 
+    return model
 
 def alexnet_2layer(topk, pretrained=True, topk_tau=0., permutate=0):
     alexnet = models.alexnet(pretrained=pretrained)
     new_features = nn.Sequential(
         # layers up to the point of insertion
-        *(list(alexnet.features.children())[:3]), 
+        *(list(alexnet.features.children())[:3]),
         *(list(alexnet.features.children())[3:6]),
         TopKLayer(topk, topk_tau=topk_tau, permutate=permutate),
         *(list(alexnet.features.children())[6:8]),
@@ -242,14 +248,14 @@ def alexnet_2layer(topk, pretrained=True, topk_tau=0., permutate=0):
     )
     alexnet.features = new_features
     model = alexnet
-    return model 
+    return model
 
 
 def alexnet_1layer(topk, pretrained=True, topk_tau=0., permutate=0):
     alexnet = models.alexnet(pretrained=pretrained)
     new_features = nn.Sequential(
         # layers up to the point of insertion
-        *(list(alexnet.features.children())[:3]), 
+        *(list(alexnet.features.children())[:3]),
         *(list(alexnet.features.children())[3:6]),
         *(list(alexnet.features.children())[6:8]),
         TopKLayer(topk, topk_tau=topk_tau, permutate=permutate),

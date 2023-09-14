@@ -16,6 +16,7 @@ Volume Path: /workspace
 -----------------------
 -  Second Time
 -----------------------
+```
 apt-get update && apt-get install -y --no-install-recommends \
         software-properties-common \
         build-essential \
@@ -27,36 +28,66 @@ apt-get update && apt-get install -y --no-install-recommends \
         g++ wget unzip \
         pkg-config \
         vim
+```
 
 this gives you tmux 
----------
+
 go to a tmux window
 ENV variable
+```
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-OpenCV/source/lib/pkgconfig
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/pkgconfig
-
+```
 # configure LD_library
+```
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-OpenCV/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/workspace/env/Install-libjpeg-turbo/install/lib/
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-# configure MODELVSHUMANDIR for on-fly shape score evaluation
-export MODELVSHUMANDIR=/workspace/ffcv-imagenet-train/model-vs-human
+```
 
+# configure CUDA
+```
+export PATH="/usr/local/cuda/bin:$PATH"
+```
+# configure MODELVSHUMANDIR for on-fly shape score evaluation
+```
+export MODELVSHUMANDIR=/workspace/ffcv-imagenet-train/model-vs-human
+```
 # OR on private server ==========
+```
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/Install-OpenCV-2/source/lib/pkgconfig
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/ylz1122/.local/libturbojpeg-2/lib/pkgconfig
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/Install-OpenCV-2/source/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ylz1122/.local/libturbojpeg-2/lib
+```
+
+
+# CUDA 
+```
 export LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH
+or
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+```
 
+# Package specific
+```
 export MODELVSHUMANDIR=/home/ylz1122/ffcv-imagenet-train/model-vs-human
+```
 
-----------
-
+# conda
+```
 source /workspace/env/miniconda3/etc/profile.d/conda.sh
 conda init bash
 conda activate ffcv
+```
+
+# ssh
+```
+ln -s /workspace/.ssh/* ~/.ssh
+chmod 0600 ~/.ssh/id_rsa
+```
+
 
 -----------------------
 - Install from scratch 
@@ -94,6 +125,7 @@ conda activate ffcv
 0. download the dataset 
 
 Use backblaze for cheap version of S3
+```
 mkdir -p /workspace/data && cd /workspace/data
 wget https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
 mv b2-linux b2
@@ -110,7 +142,7 @@ Backblaze application key:
 ```
 --------------------
 
-```
+
 1. Install conda 
 ```
 mkdir -p /workspace/env/ && cd /workspace/env/
@@ -120,7 +152,7 @@ bash Miniconda3-latest-Linux-x86_64.sh
 >>> /workspace/env/miniconda3
 
 # the following activates conda everything you exit and re-enter 
-```
+
 source /workspace/env/miniconda3/etc/profile.d/conda.sh
 conda init bash
 conda activate 
@@ -288,6 +320,12 @@ pip install -e .
 
 export MODELVSHUMANDIR=/workspace/ffcv-imagenet-train/model-vs-human
 
+
+18. matplotlib
+
+```
+pip install matplotlib
+```
 17. Debug: 
 
 [W socket.cpp:601] [c10d] The client socket has failed to connect to [localhost]:12321 (errno: 99 - Cannot assign requested address).
