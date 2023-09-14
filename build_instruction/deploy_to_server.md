@@ -176,7 +176,7 @@ export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 `
 
 10. install numba
-`pip install numba`
+`pip3 install numba`
 
 11. Compile opencv 
 

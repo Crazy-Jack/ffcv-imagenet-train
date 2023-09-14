@@ -1,0 +1,39 @@
+data:
+  in_memory: 1
+  num_workers: 24
+dist:
+  world_size: 2
+logging:
+  folder: /workspace/log
+  save_model_freq: -1
+  log_level: 2
+lr:
+  lr: 0.01
+  lr_schedule_type: cosine
+model:
+  arch: vgg_5layers_finetune
+resolution:
+  end_ramp: 27
+  max_res: 224
+  min_res: 224
+  start_ramp: 23
+training:
+  batch_size: 20
+  bn_wd: 0
+  distributed: 1
+  epochs: 32
+  label_smoothing: 0
+  momentum: 0.9
+  optimizer: sgd
+  weight_decay: 5e-5
+  use_blurpool: 0
+  vgg_topk: 0.05
+  topk_tau: 0.
+  eval_only: 0
+  scramble_reverse_weight: 1e-2
+  scramble_reverse_lr_scale: 5e-3
+validation:
+  lr_tta: true
+  resolution: 256
+resume:
+  init_eval_checker: 1

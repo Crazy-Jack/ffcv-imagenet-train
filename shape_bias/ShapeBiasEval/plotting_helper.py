@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 
-import ShapeBiasEval.constants as c
+from . import constants as c
 
 
 def get_short_imagename(imagename):

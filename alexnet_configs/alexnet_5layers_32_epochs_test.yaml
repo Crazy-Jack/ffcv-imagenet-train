@@ -28,6 +28,7 @@ training:
   weight_decay: 0.0001
   use_blurpool: 1
   alexnet_topk: 0.2
+  l1_sparsity_lamda: 0.
 validation:
   lr_tta: true
   resolution: 256

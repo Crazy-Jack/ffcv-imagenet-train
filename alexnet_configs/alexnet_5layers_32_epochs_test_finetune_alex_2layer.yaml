@@ -15,25 +15,26 @@ model:
   arch: alexnet_2layer_finetune
 resolution:
   end_ramp: 27
-  max_res: 224
-  min_res: 224
+  max_res: 160
+  min_res: 160
   start_ramp: 23
 training:
   batch_size: 2048
   bn_wd: 0
   distributed: 1
-  epochs: 90
+  epochs: 30
   label_smoothing: 0.1
   momentum: 0.9
   optimizer: sgd
   weight_decay: 5e-5
   use_blurpool: 0
   alexnet_topk: 0.2
+  l1_sparsity_lamda: 0.5
 validation:
   lr_tta: true
   resolution: 256
 resume:
-  init_eval_checker: 1
+  init_eval_checker: 0
   # model_ckpt: /home/ylz1122/ffcv-imagenet-train/scripts/alexnet/train_results/alexnet_configs/alexnet_5layers_32_epochs_test_finetune_alex-original/3937dfee-fc55-4c8d-adcf-d8137c5bbe22/weights_ep_89.pt
   # optim_ckpt: /home/ylz1122/ffcv-imagenet-train/scripts/alexnet/train_results/alexnet_configs/alexnet_5layers_32_epochs_test_finetune_alex-original/3937dfee-fc55-4c8d-adcf-d8137c5bbe22/weights_ep_89_optimizer.pt
   resume_opt_from_ckpt: 0

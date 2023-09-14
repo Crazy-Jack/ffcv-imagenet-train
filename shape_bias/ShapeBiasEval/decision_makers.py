@@ -8,8 +8,8 @@ from dataclasses import dataclass
 import fnmatch
 from matplotlib.lines import Line2D
 
-import ShapeBiasEval.constants as c
-from ShapeBiasEval.colors import *
+from . import constants as c
+from .colors import *
 
 
 @dataclass

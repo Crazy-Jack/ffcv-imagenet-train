@@ -8,7 +8,6 @@ import os
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
-from . import constants as c
 from .helper import human_categories as hc
 from . import decision_makers as dm
 

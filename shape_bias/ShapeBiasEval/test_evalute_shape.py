@@ -30,9 +30,9 @@ from dataclasses import dataclass, field
 from typing import List
 from os.path import join as pjoin
 
-import ShapeBiasEval.plotting_helper as ph
-import ShapeBiasEval.constants as consts
-import ShapeBiasEval.analyses as a
+from . import plotting_helper as ph
+from . import constants as consts
+from . import analyses as a
 
 @dataclass
 class Experiment:
@@ -221,6 +221,8 @@ def run_plotting():
 
 if __name__ == "__main__":
     modelnames="anyModel"
+    model_ckpt = f"/home/ylz1122/ffcv-imagenet-train/scripts/alexnet/train_results/alexnet_configs/alexnet_5layers_32_epochs_test_finetune_alex_2layer-original/06eec4be-88e5-43ef-8f52-6d9f827d8805/weights_ep_{ep}.pt"
+    ep = 5
     vgg16 = models.vgg16(pretrained=True)
     # 1. evaluate models on out-of-distribution datasets
     result = run_evaluation(modelnames,vgg16)

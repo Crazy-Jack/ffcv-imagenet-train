@@ -1,0 +1,39 @@
+data:
+  in_memory: 1
+  num_workers: 32
+dist:
+  world_size: 2
+logging:
+  folder: /tmp/
+  save_model_freq: -1
+  log_level: 2
+lr:
+  lr: 1.7
+  lr_schedule_type: cyclic
+model:
+  arch: resnet50_1layer_finetune
+resolution:
+  end_ramp: 27
+  max_res: 192
+  min_res: 160
+  start_ramp: 23
+training:
+  batch_size: 1024
+  bn_wd: 0
+  distributed: 1
+  epochs: 32
+  label_smoothing: 0.1
+  momentum: 0.9
+  optimizer: sgd
+  weight_decay: 0.0001
+  use_blurpool: 1
+  resnet50_topk: 0.6
+validation:
+  lr_tta: true
+  resolution: 256
+resume:
+  init_eval_checker: 1
+  # model_ckpt: /home/ylz1122/ffcv-imagenet-train/scripts/alexnet/train_results/alexnet_configs/alexnet_5layers_32_epochs_test_finetune_alex-original/3937dfee-fc55-4c8d-adcf-d8137c5bbe22/weights_ep_89.pt
+  # optim_ckpt: /home/ylz1122/ffcv-imagenet-train/scripts/alexnet/train_results/alexnet_configs/alexnet_5layers_32_epochs_test_finetune_alex-original/3937dfee-fc55-4c8d-adcf-d8137c5bbe22/weights_ep_89_optimizer.pt
+  resume_opt_from_ckpt: 0
+  resume_model_from_ckpt: 0

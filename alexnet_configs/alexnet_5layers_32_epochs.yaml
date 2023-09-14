@@ -2,31 +2,31 @@ data:
   in_memory: 1
   num_workers: 24
 dist:
-  world_size: 8
+  world_size: 2
 logging:
   folder: /workspace/log
-  save_model_freq: 4
+  save_model_freq: 50
   log_level: 2
 lr:
-  lr: 0.01
-  lr_schedule_type: cyclic
+  lr: 0.1
+  lr_schedule_type: cosine
 model:
   arch: alexnet_5layers
 resolution:
   end_ramp: 27
-  max_res: 192
-  min_res: 160
+  max_res: 224
+  min_res: 224
   start_ramp: 23
 training:
-  batch_size: 4096
+  batch_size: 2048
   bn_wd: 0
   distributed: 1
-  epochs: 32
-  label_smoothing: 0.1
+  epochs: 90
+  label_smoothing: 0
   momentum: 0.9
   optimizer: sgd
   weight_decay: 5e-5
-  use_blurpool: 1
+  use_blurpool: 0
   alexnet_topk: 0.2
 validation:
   lr_tta: true

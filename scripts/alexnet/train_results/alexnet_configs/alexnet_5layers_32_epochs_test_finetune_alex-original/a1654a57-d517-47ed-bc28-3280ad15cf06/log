@@ -1,3 +1,0 @@
-{"timestamp": 1691633849.8796334, "relative_time": 0.29914355278015137, "message": "==> creating model from scratch!"}
-{"timestamp": 1691633850.238706, "relative_time": 0.6582162380218506, "message": "==> creating optimizer from scratch!"}
-{"timestamp": 1691633940.015701, "relative_time": 90.43521118164062, "current_lr": 0.014953427884615384, "top_1": 0.0009200000204145908, "top_5": 0.004920000210404396, "val_time": 7.073175668716431, "train_loss": 6.9077786940794725, "epoch": 0}
