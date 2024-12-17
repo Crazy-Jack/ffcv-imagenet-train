@@ -46,6 +46,9 @@ from PIL import Image
 import torchvision
 import matplotlib.pyplot as plt
 
+from yolo_v8 import yolo_cls_nets
+
+
 Section('model', 'model details').params(
     arch=Param(str, default='resnet18'),
     pretrained=Param(int, 'is pretrained? (1/0)', default=0)
@@ -524,7 +527,9 @@ class ImageNetTrainer:
         elif 'resnet50_1layer_finetune' == arch.lower():
             model = topK_resnet50_1layer(resnet50_topk, topk_tau=topk_tau, pretrained=True)
 
-
+        elif arch == 'yolo-v8-m':
+            # introducing yolo-m architecture 
+            model = yolo_cls_nets.yolo_v8_m(num_classes=1000)
         else:
             model = getattr(models, arch)(pretrained=pretrained)
 
