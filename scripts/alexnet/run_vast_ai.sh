@@ -30,9 +30,10 @@ echo "running 5layer topk";
 /workspace/env/miniconda/envs/ffcv/bin/python3 ../../train.py --config-file ../../$name.yaml \
     --data.train_dataset=/workspace/data/ffcv-data/in1k_train_500_0.50_90.ffcv \
     --data.val_dataset=/workspace/data/ffcv-data/in1k_val_500_0.50_90.ffcv \
-    --data.num_workers=24 --data.in_memory=1 \
+    --data.num_workers=96 --data.in_memory=1 \
     --logging.folder=./train_results/$name-original \
     --dist.port 12321 \
+    --dist.world_size 4 \
 
 # echo "running topk";
 # topk='333366667777';
