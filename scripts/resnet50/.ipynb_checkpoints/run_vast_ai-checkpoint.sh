@@ -1,3 +1,8 @@
+pip install pytorch_pretrained_vit
+
+pip uninstall torchmetrics
+pip install torchmetrics
+
 export ENV_NAME=ffcv && \
 export WORK_DIR=/workspace && \
 export WORK_ENV_DIR=$WORK_DIR/env && \
