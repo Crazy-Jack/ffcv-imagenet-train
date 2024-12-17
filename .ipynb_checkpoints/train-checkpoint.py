@@ -643,7 +643,7 @@ class ImageNetTrainer:
                         self.val_meters[k](output, target)
 
                     loss_val = self.loss(output, target)
-                    self.val_meters['loss'](loss_val)
+                    self.val_meters['loss'].update(loss_val)
         stats = {k: m.compute().item() for k, m in self.val_meters.items()}
         [meter.reset() for meter in self.val_meters.values()]
         return stats
@@ -651,9 +651,9 @@ class ImageNetTrainer:
     @param('logging.folder')
     def initialize_logger(self, folder):
         self.val_meters = {
-            'top_1': torchmetrics.Accuracy(compute_on_step=False).to(self.gpu),
-            'top_5': torchmetrics.Accuracy(compute_on_step=False, top_k=5).to(self.gpu),
-            'loss': MeanScalarMetric(compute_on_step=False).to(self.gpu)
+            'top_1': torchmetrics.Accuracy(task="multiclass", num_classes=1000).to(self.gpu),
+            'top_5': torchmetrics.Accuracy(task="multiclass", num_classes=1000, top_k=5).to(self.gpu),
+            'loss': torchmetrics.aggregation.MeanMetric().to(self.gpu)
         }
 
         self.best_stats = {
@@ -721,8 +721,8 @@ class ImageNetTrainer:
             fd.flush()
         
         # handle the img log
-        if vis:
-            self.val_image_feature_maps(self.log_folder, cur_time)
+        # if vis:
+        #     self.val_image_feature_maps(self.log_folder, cur_time)
         
 
     @classmethod
