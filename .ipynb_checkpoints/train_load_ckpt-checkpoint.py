@@ -568,7 +568,6 @@ class ImageNetTrainer:
         else:
             self.log({'message': f"==> creating model from scratch!"})
 
-
         # model = model.to(memory_format=ch.channels_last)
         model = model.to(self.gpu)
 

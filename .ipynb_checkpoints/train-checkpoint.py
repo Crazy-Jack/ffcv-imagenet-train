@@ -542,17 +542,32 @@ class ImageNetTrainer:
 
         if resume_model_from_ckpt:
             self.log({'message': f"==> Loading model ckpt from {model_ckpt}!"})
-            checkpoint = torch.load(model_ckpt)
+            if arch in ['yolo-v8-m']:
+                checkpoint = torch.load(model_ckpt)['model']
+            
+            
+            else:
+                checkpoint = torch.load(model_ckpt)
+            
             # editing the mapping keys
-            new_checkpoint = {}
+            param_count = 0
+            new_checkpoint = model.state_dict()
+            # print(new_checkpoint.keys())
             for k in checkpoint:
-                new_k = k.replace("module.", "")
-                new_checkpoint[new_k] = checkpoint[k]
-
+                # print(k)
+                new_k = k.replace("module.net.sp_cnn.", "")
+                if new_k in new_checkpoint:
+                    new_checkpoint[new_k] = checkpoint[k]
+                    param_i = 1
+                    for i in new_checkpoint[new_k].shape:
+                        param_i *= i
+                    param_count += param_i
+            print(f"==> Total param loaded: {param_count / 1e+6} M")
             model.load_state_dict(new_checkpoint)
 
         else:
             self.log({'message': f"==> creating model from scratch!"})
+
 
         # model = model.to(memory_format=ch.channels_last)
         model = model.to(self.gpu)

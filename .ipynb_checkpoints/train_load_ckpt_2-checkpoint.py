@@ -568,7 +568,6 @@ class ImageNetTrainer:
         else:
             self.log({'message': f"==> creating model from scratch!"})
 
-
         # model = model.to(memory_format=ch.channels_last)
         model = model.to(self.gpu)
 
@@ -598,7 +597,10 @@ class ImageNetTrainer:
 
             self.optimizer.zero_grad(set_to_none=True)
             with autocast():
+                
+
                 output = self.model(images)
+                
                 loss_train = self.loss(output, target)
 
                 if l1_sparsity_lamda > 0:
