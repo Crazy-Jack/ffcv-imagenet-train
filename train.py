@@ -41,14 +41,11 @@ from ffcv.fields.basics import IntDecoder
 from architecture import *
 from pytorch_pretrained_vit import ViT
 
-<<<<<<< HEAD
 from torchvision import transforms
 from PIL import Image
 import torchvision
 import matplotlib.pyplot as plt
 
-=======
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
 Section('model', 'model details').params(
     arch=Param(str, default='resnet18'),
     pretrained=Param(int, 'is pretrained? (1/0)', default=0)
@@ -397,7 +394,6 @@ class ImageNetTrainer:
                     'epoch': epoch
                 }
 
-<<<<<<< HEAD
                 save_or_not = self.eval_and_log(extra_dict)
             
                 if save_model_freq > 0 and epoch > 0:
@@ -411,15 +407,6 @@ class ImageNetTrainer:
                         ch.save(self.model.state_dict(), self.log_folder / f'weights_best.pt')
                         ch.save(self.optimizer.state_dict(), self.log_folder / f'weights_best_optimizer.pt')
                 
-=======
-                self.eval_and_log(extra_dict)
-
-            if save_model_freq > 0:
-                if self.gpu == 0 and epoch % save_model_freq == 0 or epoch == (epochs - 1):
-                    ch.save(self.model.state_dict(), self.log_folder / f'weights_ep_{epoch}.pt')
-                    ch.save(self.optimizer.state_dict(), self.log_folder / f'weights_ep_{epoch}_optimizer.pt')
-
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
         self.eval_and_log({'epoch':epoch})
         # if self.gpu == 0:
         #     ch.save(self.model.state_dict(), self.log_folder / 'final_weights.pt')
@@ -486,7 +473,6 @@ class ImageNetTrainer:
                             topk_info=topk_info)
             else:
                 model = ViT(model_name_vit, pretrained=False, image_size=224, topk_layer_name=topk_layer_name, topk_info=topk_info)
-<<<<<<< HEAD
         
         elif 'alexnet_5layers' == arch.lower():
             model = alexnet_5layer(alexnet_topk, pretrained=False, topk_tau=topk_tau)
@@ -494,45 +480,6 @@ class ImageNetTrainer:
         elif 'alexnet_5layers_finetune' == arch.lower():
             # model = models.alexnet(pretrained=True)
             model = alexnet_5layer(alexnet_topk, pretrained=True, topk_tau=topk_tau)
-=======
-
-        elif 'alexnet_5layers' in arch.lower():
-            alexnet = models.alexnet(pretrained=True)
-
-            new_features = nn.Sequential(
-                # layers up to the point of insertion
-                *(list(alexnet.features.children())[:3]),
-                TopKLayer(alexnet_topk),
-                *(list(alexnet.features.children())[3:6]),
-                TopKLayer(alexnet_topk),
-                *(list(alexnet.features.children())[6:8]),
-                TopKLayer(alexnet_topk),
-                *(list(alexnet.features.children())[8:10]),
-                TopKLayer(alexnet_topk),
-                *(list(alexnet.features.children())[10:]),
-                TopKLayer(alexnet_topk),
-            )
-            alexnet.features = new_features
-            model = alexnet
-            print("Using alexnet 5topk layers")
-        elif 'alexnet_5layers_finetune' == arch.lower():
-            alexnet = models.alexnet(pretrained=True)
-            new_features = nn.Sequential(
-                # layers up to the point of insertion
-                *(list(alexnet.features.children())[:3]),
-                TopKLayer(alexnet_topk),
-                *(list(alexnet.features.children())[3:6]),
-                TopKLayer(alexnet_topk),
-                *(list(alexnet.features.children())[6:8]),
-                TopKLayer(alexnet_topk),
-                *(list(alexnet.features.children())[8:10]),
-                TopKLayer(alexnet_topk),
-                *(list(alexnet.features.children())[10:]),
-                TopKLayer(alexnet_topk),
-            )
-            alexnet.features = new_features
-            model = alexnet
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
             print("Using alexnet 5topk layers for finetune")
         elif 'alexnet_5layers_finetune_perm' == arch.lower():
             model = alexnet_5layer(alexnet_topk, pretrained=True, topk_tau=topk_tau, permutate=1)
@@ -568,7 +515,6 @@ class ImageNetTrainer:
             alexnet = models.alexnet(pretrained=False)
             model = alexnet
 
-<<<<<<< HEAD
         elif 'resnet50_4layers_finetune' == arch.lower():
             model = topK_resnet50(resnet50_topk, topk_tau=topk_tau, pretrained=True)
         
@@ -579,20 +525,6 @@ class ImageNetTrainer:
             model = topK_resnet50_1layer(resnet50_topk, topk_tau=topk_tau, pretrained=True)
 
 
-=======
-        elif 'resnet50_4layers' in arch.lower():
-
-            resnet50 = models.resnet50(pretrained=False)
-            for name, module in resnet50.named_children():
-                if name in ['layer1', 'layer2', 'layer3','layer4']:
-                    new_module = nn.Sequential(
-                        module,
-                        TopKLayer(resnet50_topk),
-                    )
-                    setattr(resnet50, name, new_module)
-            print("Using alexnet 4topk layers")
-            model = resnet50
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
         else:
             model = getattr(models, arch)(pretrained=pretrained)
 
@@ -712,13 +644,6 @@ class ImageNetTrainer:
 
                     loss_val = self.loss(output, target)
                     self.val_meters['loss'](loss_val)
-<<<<<<< HEAD
-                    
-
-        # add evaluation of shape bias 
-=======
-
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
         stats = {k: m.compute().item() for k, m in self.val_meters.items()}
         [meter.reset() for meter in self.val_meters.values()]
         return stats
@@ -752,7 +677,6 @@ class ImageNetTrainer:
             with open(folder / 'params.json', 'w+') as handle:
                 json.dump(params, handle)
 
-<<<<<<< HEAD
     def val_image_feature_maps(self, dir, cur_time):
         
         img_ = Image.open("/home/ylz1122/ffcv-imagenet-train/airplane1-chair2.png")
@@ -785,55 +709,6 @@ class ImageNetTrainer:
         
         
     def log(self, content, vis=False):
-=======
-
-    # [ v ] add .sparse_x and .origin_x to TopKLayer
-    def log_vis_gram(self):
-        img = Image.open("/workspace/ffcv-imagenet-train/airplane1-chair2.png")
-        tfms = transforms.Compose([transforms.Resize(224), transforms.ToTensor(), transforms.Normalize([0.5,], [0.5,])])
-        img = tfms(img).unsqueeze(0)
-        assert self.gpu == 0
-        img = img.to("cuda:0")
-
-        # eval model
-        self.model.eval()
-        output = self.model(img)
-
-        # get activation
-        layer_sparse_activation = {}
-        layer_original_activation = {}
-        for name, m in model.features.named_children():
-            if isinstance(m, TopKLayer):
-                layer_sparse_activation[name] = m.sparse_x
-                layer_original_activation[name] = m.original_x
-        # plot
-        def plot(layer_sparse_activation, log_dir, title):
-            for layer in layer_sparse_activation:
-                target_tensor = layer_sparse_activation[layer]
-                n, c, h, w = target_tensor.shape
-                target_tensor = target_tensor.reshape(n * c, h * w)
-                # target_tensor = torch.nn.functional.normalize(target_tensor, dim=1)
-                Gram = torch.matmul(target_tensor, target_tensor.T).cpu()
-                Gram = Gram.unsqueeze(0).repeat(3, 1, 1)
-                grid_img = torchvision.utils.make_grid(Gram, nrow=1)
-                plt.clf()
-                plt.imshow(grid_img.permute(1, 2, 0))
-                title_i = os.path.join(log_dir, f"{title}_layer_{layer}_{int(time.time())}")
-                plt.savefig(f"{title_i}.png")
-                # tensor
-                torch.save(Gram, f"{title_i}.pt")
-
-
-        vis_dir = os.path.join(self.log_dir, 'vis')
-        os.makedirs(vis_dir, exist_ok=True)
-        plot(layer_sparse_activation, vis_dir, "sparse")
-        plot(layer_original_activation, vis_dir, "origin")
-
-
-
-
-    def log(self, content):
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
         print(f'=> Log: {content}')
         if self.gpu != 0: return
         cur_time = time.time()
@@ -844,16 +719,11 @@ class ImageNetTrainer:
                 **content
             }) + '\n')
             fd.flush()
-<<<<<<< HEAD
         
         # handle the img log
         if vis:
             self.val_image_feature_maps(self.log_folder, cur_time)
         
-=======
-        if self.gpu == 0:
-            self.log_vis_gram()
->>>>>>> 33fb10544db9da099cb4c8877415dd9876508df8
 
     @classmethod
     @param('training.distributed')
