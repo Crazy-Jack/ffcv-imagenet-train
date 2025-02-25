@@ -9,3 +9,4 @@ model-vs-human.tar
 __pycache__/
 
 train_results/
+*.pth

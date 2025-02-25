@@ -15,7 +15,7 @@ model:
 resolution:
   end_ramp: 27
   max_res: 224
-  min_res: 192
+  min_res: 224
   start_ramp: 1
 training:
   batch_size: 512
