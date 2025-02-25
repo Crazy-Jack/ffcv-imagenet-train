@@ -1,6 +1,7 @@
+### 
 pip install pytorch_pretrained_vit
 
-pip uninstall torchmetrics
+pip uninstall torchmetrics -y
 pip install torchmetrics
 
 export ENV_NAME=ffcv && \
@@ -18,7 +19,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$WORK_ENV_DIR/Install-libjpeg-turbo/inst
 export CUDA_VISIBLE_DEVICES=0,1;
 
 # name="vit-b-configs/vit_b_32_32_epochs_1_gpu_varyingsize_0_base_0";
-name="rn50_configs/rn50_32_epochs_vastai_baseline";
+name="vit-s-configs/vit-s-config_pod";
 # name="vit-b-configs/vit_b_16_epochs_dist_gpu_varyingsize_0_topk_1";
 # name="vit-b-configs/vit_b_16_epochs_1_gpu_varyingsize_0_topk_1";
 # name="vit-b-configs/vit_b_16_epochs_1_gpu_varyingsize_1";
@@ -31,11 +32,11 @@ echo "running "$name;
 # echo "running 5layer topk";
 # Set the visible GPUs according to the `world_size` configuration parameter
 # Modify `data.in_memory` and `data.num_workers` based on your machine
-python ../../train.py --config-file ../../$name.yaml \
+python ../../train_ssl.py --config-file ../../$name.yaml \
     --data.train_dataset=/workspace/data/ffcv-data/in1k_train_500_0.50_90.ffcv \
     --data.val_dataset=/workspace/data/ffcv-data/in1k_val_500_0.50_90.ffcv\
     --data.num_workers=32 --data.in_memory=1 \
     --logging.folder=./train_results/$name-original \
-    --training.batch_size 512 \
+    --training.batch_size 128 \
     --dist.port 12321 \
     --dist.world_size 2 \

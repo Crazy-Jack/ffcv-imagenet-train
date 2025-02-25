@@ -36,5 +36,6 @@ python ../../train.py --config-file ../../$name.yaml \
     --data.val_dataset=/workspace/data/ffcv-data/in1k_val_500_0.50_90.ffcv\
     --data.num_workers=32 --data.in_memory=1 \
     --logging.folder=./train_results/$name-original \
+    --training.batch_size 512 \
     --dist.port 12321 \
     --dist.world_size 2 \
