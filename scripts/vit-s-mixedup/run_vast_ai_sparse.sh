@@ -40,7 +40,7 @@ python ../../train_sparse.py --config-file ../../$name.yaml \
     --sparse.line_drawing_path=../../linedrawings_ckpt/anime_style/netG_A_latest.pth \
     --sparse.patch_selection_topk 10 \
     --model.arch ViT+S_sparse \
-    --training.batch_size 256 \
+    --training.batch_size 196 \
     --training.epochs 300 \
     --dist.port 12321 \
     --dist.world_size 2 \

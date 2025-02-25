@@ -362,9 +362,9 @@ class ViT_sparse(nn.Module):
         
         with torch.no_grad():
             out = self.net_G(x)
-            linedrawing_pooled = F.avg_pool2d(out, kernel_size=self.fh, stride=self.fh)  # (B, 1, Gh, Gw)
+            linedrawing_pooled = F.avg_pool2d(x[:, :1, :, :], kernel_size=self.fh, stride=self.fh)  # (B, 1, Gh, Gw)
             linedrawing_pooled = linedrawing_pooled.view(b, -1)
-            
+
             topk = int(topk * linedrawing_pooled.shape[1])  # Compute number of patches to keep
             _, topk_indices = torch.topk(linedrawing_pooled.abs(), topk, dim=1)  # Get indices of top-K activations
             if visualize:
