@@ -46,7 +46,7 @@ from PIL import Image
 import torchvision
 import matplotlib.pyplot as plt
 
-from yolo_v8 import yolo_cls_nets
+from yolo_v8 import yolo_cls_nets, yolo_fpn_nets
 
 
 Section('model', 'model details').params(
@@ -530,6 +530,8 @@ class ImageNetTrainer:
         elif arch == 'yolo-v8-m':
             # introducing yolo-m architecture 
             model = yolo_cls_nets.yolo_v8_m(num_classes=1000)
+        elif arch == 'yolo-v8-m-fpn':
+            model = yolo_fpn_nets.yolo_v8_m(num_classes=1000)
         else:
             model = getattr(models, arch)(pretrained=pretrained)
 
@@ -542,7 +544,7 @@ class ImageNetTrainer:
 
         if resume_model_from_ckpt:
             self.log({'message': f"==> Loading model ckpt from {model_ckpt}!"})
-            if arch in ['yolo-v8-m']:
+            if arch in ['yolo-v8-m', 'yolo-v8-m-fpn']:
                 checkpoint = torch.load(model_ckpt)['model']
             
             
