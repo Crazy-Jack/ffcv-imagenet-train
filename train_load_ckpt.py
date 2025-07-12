@@ -46,7 +46,7 @@ from PIL import Image
 import torchvision
 import matplotlib.pyplot as plt
 
-from yolo_v8 import yolo_cls_nets, yolo_fpn_nets
+from yolo_v8 import yolo_cls_nets, yolo_fpn_nets, yolo_fpn_nets_topk_v1
 
 
 Section('model', 'model details').params(
@@ -108,6 +108,8 @@ Section('training', 'training hyper param stuff').params(
     scramble_reverse_weight=Param(float, 'weight of how much reverse optimization would weight', default=1e-3),
     scramble_reverse_lr_scale=Param(float, 'downscale the scamble down scale', default=1e-2),
     topk_decay_ramp=Param(float, 'topk decay ramp?', default=1e+4),
+    yolo_v8_m_topk=Param(str, 'yolo-v8-m-fpn-topk-v1 topk info', default='p3:0.5,p4:0.5,p5:0.5'),
+    reset_frequency=Param(int, 'reset frequency', default=1),
 )
 
 Section('resume', 'training resume with checkpoints').params(
@@ -452,7 +454,8 @@ class ImageNetTrainer:
     @param('training.resnet50_topk')
     @param('training.topk_decay_ramp')
     @param('training.vgg_topk')
-    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name, alexnet_topk, resnet50_topk, topk_tau, vgg_topk, topk_decay_ramp):
+    @param('training.yolo_v8_m_topk')
+    def create_model_and_scaler(self, arch, pretrained, distributed, use_blurpool, topk_info, resume_model_from_ckpt, model_ckpt, topk_layer_name, alexnet_topk, resnet50_topk, topk_tau, vgg_topk, topk_decay_ramp, yolo_v8_m_topk):
         scaler = GradScaler()
         if 'vit' == arch.lower()[:3]:
             model_name_vit = arch.split("+")[1] # B_16_imagenet1k
@@ -532,6 +535,8 @@ class ImageNetTrainer:
             model = yolo_cls_nets.yolo_v8_m(num_classes=1000)
         elif arch == 'yolo-v8-m-fpn':
             model = yolo_fpn_nets.yolo_v8_m(num_classes=1000)
+        elif arch == 'yolo-v8-m-fpn-topk-v1':
+            model = yolo_fpn_nets_topk_v1.yolo_v8_m(num_classes=1000, topk_info=yolo_v8_m_topk)
         else:
             model = getattr(models, arch)(pretrained=pretrained)
 
@@ -581,8 +586,14 @@ class ImageNetTrainer:
         return model, scaler
 
     @param('logging.log_level')
+    @param('model.arch')
     @param('training.l1_sparsity_lamda')
-    def train_loop(self, epoch, log_level, l1_sparsity_lamda):
+    @param('training.reset_frequency')
+    def train_loop(self, epoch, arch, log_level, l1_sparsity_lamda, reset_frequency):
+        if arch == 'yolo-v8-m-fpn-topk-v1':
+            if epoch % reset_frequency == 0:
+                self.model.module.reset_weights()
+
         model = self.model
         model.train()
         losses = []
@@ -593,6 +604,7 @@ class ImageNetTrainer:
 
         iterator = tqdm(self.train_loader)
         for ix, (images, target) in enumerate(iterator):
+
             ### Training start
             for param_group in self.optimizer.param_groups:
                 param_group['lr'] = lrs[ix]

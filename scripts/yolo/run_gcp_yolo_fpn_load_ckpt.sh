@@ -4,7 +4,6 @@
 # pip install torchmetrics
 
 export ENV_NAME=ffcv && \
-
 export WORK_DIR=/home/i3fellow001
 export WORK_ENV_DIR=/home/i3fellow001/env
 export ENV_NAME=$WORK_ENV_DIR/miniconda/envs/ffcv && \
@@ -64,10 +63,12 @@ echo "running "$name;
 # Modify `data.in_memory` and `data.num_workers` based on your machine
 python ../../train_load_ckpt.py --config-file ../../$name.yaml \
     --data.train_dataset=$WORK_DIR/data/ffcv-data/in1k_train_500_0.50_90.ffcv \
-    --data.val_dataset=$WORK_DIR/data/ffcv-data/in1k_val_500_0.50_90.ffcv\
+    --data.val_dataset=$WORK_DIR/data/ffcv-data/in1k_val_500_0.50_90.ffcv \
     --data.num_workers=23 --data.in_memory=1 \
     --logging.folder=./train_results/$name-original \
     --dist.port 12321 \
     --dist.world_size 2 \
+    --model.arch yolo-v8-m-fpn \
     --resume.model_ckpt $CKPT \
     --resume.resume_model_from_ckpt 1 \
+    --training.batch_size 256 \
